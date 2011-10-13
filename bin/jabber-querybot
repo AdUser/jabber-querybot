@@ -48,7 +48,7 @@ my $service_name		= $Querymodule::service_name;
 my $bot_admin			= $Querymodule::bot_admin;
 my $hostname			= $Querymodule::hostname;
 my $port			= $Querymodule::port;
-my $jid				= $Querymodule::jid;
+my $user			= $Querymodule::user;
 my $password			= $Querymodule::password;
 my $timeout			= $Querymodule::timeout;
 my $timer_auto_query_run	= $Querymodule::timer_auto_query;
@@ -405,7 +405,7 @@ $Querymodule::Con->Connect(
    }
   else
    {
-    querybot_log("info","Connect_server(): Ooops... no connection for $jid\@$hostname, we're waiting 60 secs ...");
+    querybot_log("info","Connect_server(): Ooops... no connection for $user\@$hostname, we're waiting 60 secs ...");
     
     for(my $i=0;$i< 60; $i++)
      {
@@ -424,9 +424,9 @@ $Querymodule::Con->SetCallBacks	(
   "presence" 	=> \&InPresence 
 			);
 
-querybot_log("info","connect_server(): Send authentication $jid\@$hostname");
+querybot_log("info","connect_server(): Send authentication $user\@$hostname");
 my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend ( 
-  username=>	$jid,
+  username=>	$user,
   password=>	$password,
   resource=>	$ressource
 );
@@ -738,14 +738,14 @@ if ($message =~ /!penalty workload/)
 sub get_barejid
  {
 
-   my $jid = shift;
+   my $user = shift;
 
    #
    # Remove Resource id from jabber-id for example
    # /Psi
    #
 
-   my ($barejid)                 = split (/\//, $jid);
+   my ($barejid)                 = split (/\//, $user);
 
    return $barejid;
 
@@ -876,7 +876,7 @@ sub penalty_handler
 # 		with incoming mesages and reject if it is.
 #
  {
-  my $jid	= shift;
+  my $user	= shift;
 
   #
   # Two times that's ok so 2:1 because while in main.
@@ -887,14 +887,14 @@ sub penalty_handler
     #
     # Bot admin has everytime access.
     #
-    if($jid eq $bot_admin)
+    if($user eq $bot_admin)
      { return 0; }
     else
      { 
-      querybot_log("info","penalty_handler($jid): Query not proceeded ($stanza_penalty_calc >= " .
+      querybot_log("info","penalty_handler($user): Query not proceeded ($stanza_penalty_calc >= " .
 		"$stanza_penalty_calc_default)");
       return 1; 
-     } ### if($jid eq $bot_admin)
+     } ### if($user eq $bot_admin)
    return 0;
   } ### if($querystatus == 1 and $penalty_status eq "penalty")
  } ### penalty_handler
@@ -909,7 +909,7 @@ sub jabber_add_footer
 
 $msg .= "
 ---
-$ident ($release) proceeded in $elapsed sec / IM powered by http://web.swissjabber.ch";
+$ident ($release) proceeded in $elapsed sec";
   return $msg;
  } ### jabber_add_footer
 
