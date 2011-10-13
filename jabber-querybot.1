@@ -31,14 +31,16 @@ Create a bot application:
 .B 3.
 Modify login parameters to your jabber-bot-account
  vim Mybot.pm
-  our $ident              = "Testbot";
-  our $service_name       = "";
-  our $bot_admin          = "user\@swissjabber.ch";
-  our $hostname           = "swissjabber.ch";
-  our $port               = "5222";
-  our $timeout            = "5";
-  our $jid                = "";
-  our $password           = "";
+  our $hostname	   = "swissjabber.ch";
+  our $user            = "";
+  our $password        = "";
+  our $ident           = "Testbot";
+  our $bot_admin       = "\@swissjabber.ch";
+  our $port            = "5222";
+  our $timeout         = "5";
+  our $service_name    = "$user\@$hostname";
+  our $bot_description = "Bot help title
+  Bot description";
 .PP
 .B 4.
 For each jabber message, jabber-querybot will execute 
@@ -56,12 +58,9 @@ You can control how your jabber response will be:
 .B ignore
 = ignore message
 .SH EXAMPLES
-.B sub run_query
- {
- my $var = "Hi, I am a bot";
- return ("msg",0,$var);
- #return ("error",406,"My error message");
- }
+.PP
+Check example file:
+ /usr/share/doc/jabber-querybot/examples/Testbot.pm
 .SH FILES
 .FN /etc/jabber-querybot/Querymodule.pm
  The main jabber-querybot configuration file
