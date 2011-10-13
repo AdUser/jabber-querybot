@@ -1,16 +1,16 @@
 .de FN
 \fI\|\\$1\|\fP
 ..
-.TH "jabber-querybot" "1" "0.0.1"
+.TH "jabber\\-querybot" "1" "0.0.1"
 .SH NAME
-jabber-querybot \- a modular xmpp/jabber bot
+jabber\-querybot \\- a modular xmpp/jabber bot
 .SH SYNOPSIS
-jabber-querybot
+jabber\-querybot
 .PP
-jabber-querybot 2>&1 > /dev/null &
+jabber\-querybot 2>&1 > /dev/null &
 .SH DESCRIPTION
 .PP
-.FN jabber-querybot
+.FN jabber\-querybot
 is a Jabber bot framework for Perl that enables you to easily write simple
 Jabber bots.
 This bot is from swissjabber team and now under opensource license
@@ -18,18 +18,18 @@ available. It's a simple concept with a lot of experiences implemented to this
 nice pice of code.
 .PP
 .B 1.
-Create a jabber account on a jabber-server around
+Create a jabber account on a jabber\-server around
 .PP
 .B 2.
 Create a bot application:
 .PP
- cd /usr/share/doc/jabber-querybot/examples
- cp Testbot.pm /etc/jabber-querybot/Mybot.pm
- cd /etc/jabber-querybot
- ln -s Mybot.pm Querymodule.pm
+ cd /usr/share/doc/jabber\-querybot/examples
+ cp Testbot.pm /etc/jabber\-querybot/Mybot.pm
+ cd /etc/jabber\-querybot
+ ln \-s Mybot.pm Querymodule.pm
 .PP
 .B 3.
-Modify login parameters to your jabber-bot-account
+Modify login parameters to your jabber\-bot\-account
  vim Mybot.pm
   our $hostname	   = "swissjabber.ch";
   our $user            = "";
@@ -43,7 +43,7 @@ Modify login parameters to your jabber-bot-account
   Bot description";
 .PP
 .B 4.
-For each jabber message, jabber-querybot will execute 
+For each jabber message, jabber\-querybot will execute 
 .B sub run_query,
 that you can write here your application.
 .PP
@@ -60,13 +60,13 @@ You can control how your jabber response will be:
 .SH EXAMPLES
 .PP
 Check example file:
- /usr/share/doc/jabber-querybot/examples/Testbot.pm
+ /usr/share/doc/jabber\-querybot/examples/Testbot.pm
 .SH FILES
-.FN /etc/jabber-querybot/Querymodule.pm
- The main jabber-querybot configuration file
+.FN /etc/jabber\-querybot/Querymodule.pm
+ The main jabber\-querybot configuration file
 .SH AUTHORS
 Written by Marco Balmer
 .PP
 .SH RESOURCES
 .TP
-http://github.com/micressor/jabber-querybot/
+http://github.com/micressor/jabber\-querybot/
