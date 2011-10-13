@@ -1,0 +1,1009 @@
+#!/usr/bin/perl
+#
+# This file is part of Querybot (-a modular perl jabber bot)
+# http://github.com/micressor/jabber-querybot
+#
+# Querybot is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Querybot is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Querybot. If not, see <http://www.gnu.org/licenses/>.
+
+use strict;
+#use lib "./";
+use Net::XMPP qw(Client Message);
+use Digest::MD5 qw(md5 md5_hex md5_base64);
+use Time::HiRes qw(gettimeofday);
+use Sys::Syslog;
+use Sys::CpuLoad;
+use XML::Smart;
+use DBI;
+use Encode;
+use utf8;
+
+### CONFIGURATION ###
+use Querymodule;
+my $release = "0.0.1";
+### CONFIGURATION ###
+
+$SIG{KILL}      = \&Stop;
+$SIG{TERM}      = \&Stop;
+$SIG{INT}       = \&Stop;
+
+$Querymodule::Con	
+	= new Net::XMPP::Client(debuglevel=>0,debugfile=>"stdout");
+
+
+### BEGIN CONFIGURATION ###
+
+my $ident			= $Querymodule::ident;
+my $service_name		= $Querymodule::service_name;
+my $bot_admin			= $Querymodule::bot_admin;
+my $hostname			= $Querymodule::hostname;
+my $port			= $Querymodule::port;
+my $jid				= $Querymodule::jid;
+my $password			= $Querymodule::password;
+my $timeout			= $Querymodule::timeout;
+my $timer_auto_query_run	= $Querymodule::timer_auto_query;
+my $status_auto_query		= $Querymodule::status_auto_query;
+my $stanza_penalty_calc_default	= 60;
+if ($Querymodule::stanza_penalty_calc_default)
+ {
+   $stanza_penalty_calc_default	= $Querymodule::stanza_penalty_calc_default;
+ } ### if ($Querymodule::stanza_penalty_calc_default)
+my $ressource			= $ident;
+my $bot_work_message		= "$ident workload is normal";
+my $bot_idle_message		= "$ident is waiting for queries";
+my $bot_msg_maintenance		= "Sorry, $ident is temporary in maintenance.";
+my $bot_description		= $Querymodule::bot_description;
+
+### END CONFIGURATION ###
+
+
+### Start of Main-Script ###
+
+openlog($ident,"","local0");
+
+my $Con_stat;
+my $querystatus 		= 0;
+my $querycount			= 0;
+my $uptime			= 0;
+my $timer_presence		= -10;
+my $timer_idle			= 0;
+my $timer_reconnect		= 0;
+my $timer_penalty		= 0;
+my $bot_status			= "";
+my $penalty_status		= "normal";
+my $penalty_counter_penalties	= "0";
+my $penalty_counter_normal	= "0";
+my $msg_per			= 0;
+my $uptime_hours		= 0;
+my $stanza_counter_total	= 0;
+my $stanza_counter_total_penalty= 0;
+my $stanza_counter_total_q	= 0;
+my $stanza_counter_message	= 0;
+my $stanza_counter_message_q	= 0;
+my $stanza_counter_presence	= 0;
+my $stanza_counter_presence_q	= 0;
+my $stanza_counter_iq		= 0;
+my $stanza_counter_iq_q		= 0;
+my $stanza_penalty_calc		= 0;
+
+my $timer_idle_default		= 3600;
+my $timer_presence_default 	= 7200;
+my $timer_reconnect_default	= 21600;
+
+
+my $timer_auto_query		= 0;
+my @system_load 		= "";
+my $system_load_status 		= "0";  # 0 = System load is ok
+					# 1 = system load is too high
+
+
+querybot_log("info","Init(): Startup $ident...");
+
+while(system_load_check() ne 0)
+{
+  querybot_log("info","main->system_load_check(): Load to high, will not start");
+  sleep 10
+}
+
+connect_bot();
+
+# Loop until we're finished.
+while ($Querymodule::Con) 
+ {
+ reconnect_server() unless defined($Querymodule::Con->Process(1));
+ $timer_presence++;
+ $timer_idle++;
+ $uptime++;
+ $timer_auto_query++;
+ $timer_reconnect++;
+ $timer_penalty++;
+ calculate_stats();
+ # Check if system load is too high.
+ if(system_load_check() == 1)
+ {
+   querybot_log("info","main->system_load_check(): System load too high, will shutdown querybot.");
+   disconnect_server();
+   while(system_load_check() ne 0)
+   {
+     sleep 10;
+     querybot_log("info",'main->system_load_check(): Load still too high ('.$system_load[0].')');
+   }
+   connect_bot();
+ }
+
+ #
+ # Send let's go
+ #
+ if($timer_presence == 0)
+  {
+   jabber_set_presence(undef,"Ok, let's go, I am ready for queries...");
+   $querystatus		=1;
+   $timer_penalty	=0;
+  } ### if($timer_presence == 0)
+
+ if($timer_penalty >= 60)
+  {
+  $timer_penalty=0;
+  $stanza_counter_total_penalty = $stanza_counter_total;
+  } ### if($timer_penalty > 60)
+ 
+ if($timer_reconnect >= $timer_reconnect_default and $querystatus == 1)
+  {
+   querybot_log("info","reconnect_mode(): Execute...");
+   disconnect_server();
+   querybot_log("info","reconnect_mode(): Wait...");
+   sleep(10);
+   connect_bot();
+   querybot_log("info","reconnect_mode(): Done");
+  } ### END of if($timer_reconnect....
+ 
+ #
+ # Change presence status only, if queries are enabled
+ #
+ unless($querystatus == 0)
+ {
+
+ #
+ # Send timer presence (for transports like icq and msn
+ #
+ if(($timer_presence > $timer_presence_default) and ($timer_idle > $timer_idle_default)
+ 	and $penalty_status eq "normal")
+  {
+        querybot_log("info","mail(): $bot_idle_message workload: $msg_per queries/hour");
+	jabber_set_presence(
+	"away","$bot_idle_message workload: $msg_per queries/hour","force");
+	$timer_presence = 1;
+  } ### if(($timer_presence > $timer_presence_default) and ($timer_idle > $timer_idle_default))
+
+ #
+ # Run auto queries, if configured
+ #
+ if($status_auto_query == 1 and ($querystatus==1 and ($timer_auto_query >= $timer_auto_query_run)))
+  {
+   querybot_log("notice","run_auto_query(): Execute...");
+   $timer_auto_query=0; my ($ret,$status) = run_auto_query();
+   querybot_log("notice","run_auto_query(): Exit: $ret $status");
+  } ### if($status_auto_query == 1 and ($querystatus==1 and ($timer_auto_query >= $timer_auto_query_run)))
+
+  } ### END of unless($querystatus)
+} ### while
+
+### End of Main-Script ###
+
+sub InMessage
+
+#
+# A message come in ;)
+#
+{
+
+#
+# Read parameters of incoming stanza
+#
+my $t0 			= gettimeofday;
+my $sid			= shift;
+my $message		= shift;
+my $from                = $message->GetFrom();
+#
+# Decode utf8
+#
+my $from_utf8_decoded	= encode("utf8", $from);
+my $barejid             = get_barejid($from_utf8_decoded);
+
+$stanza_counter_message++;
+
+#
+# increment timer overload
+# 
+if(penalty_handler($barejid) > 0)
+ {
+  #
+  # Do not process message if we are overloaded.
+  #
+  return undef;
+ }
+
+my $digest_jid 		= md5_hex($barejid);
+my $to                  = $message->GetTo();
+my $body                = $message->GetBody();
+my $subject             = $message->GetSubject();
+my $type                = $message->GetType();
+my $thread		= $message->GetThread();
+
+#
+# Ignore message if it is from myself
+#
+
+if($service_name eq $barejid)
+ {
+  querybot_log("info","InMessage(): Msg from myself -- ignored");
+  return -1;
+ } ### if($service_name eq $barejid)
+#
+# Check if it is a system message from an other transport
+#
+unless($barejid =~ /\@/)
+ {
+ querybot_log("info","InMessage($barejid): System msg (without @) -- ignored ");
+ return 0;
+ } ### unless($barejid =~ /\@/)
+if($body eq "")
+ {
+ querybot_log("info","InMessage($barejid): Msg (empty body) -- ignored ");
+ return 0;
+ } ### if($body eq "")
+
+
+#
+# Check any systemcommands for the BOT
+#
+
+my ($ret_msg);
+if($body =~ /!/ or $body eq "help")
+ {
+  ($ret_msg) 		= systemcommands($from, $body,$type,$thread); 
+  my $elapsed 		= calculate_elapsed_time($t0);
+  my $ret_msg_footer 	= jabber_add_footer($ret_msg,$elapsed);
+  querybot_log("info","InMessage($barejid): Admin command `$body` --  processed");
+  jabber_send_message($from,$type,$thread,$ret_msg_footer);
+  return 0;
+ } ### unless($barejid eq $bot_admin)
+
+#
+# A message is incomming, if the bot is sleeping, change the status to work
+#
+
+unless ($querystatus == 0)
+{
+if ($bot_status eq 'away')
+ {
+  jabber_set_presence(undef,$bot_work_message);
+ } ### if ($bot_status eq 'away')
+} ### END of unless($querystatus ....
+
+#
+# Process only normal text or chat messages
+#
+
+if (($type eq 'normal' or $type eq '' or $type eq 'chat') 
+	and ($querystatus==1 or ($bot_admin eq $barejid))) 
+ {
+ 
+  #
+  # Execute the query run_query()
+  #
+
+  #
+  # If timer_presence is < 0 and a stanza is incomming, querystatus will
+  # never go to 1. 
+  #
+  if($timer_presence > 0 and $penalty_status eq "normal")
+   {
+    jabber_set_presence(undef,$bot_work_message);
+    $timer_idle 		= 0;
+    $timer_presence 		= 0;
+   } ### if($timer_presence > 0)
+
+my (	$response,
+	$response_status,
+	$response_status_code,
+	$s_proceeded
+   );
+
+  #
+  # EXECUTE query
+  #
+  ($response_status,$response_status_code,$response,$s_proceeded) 
+  = run_query($body,$from,$barejid,$digest_jid,$subject);
+  #
+  # END EXECUTE query
+  #
+
+  #
+  # Check if response is to ignore and do it
+  #
+
+  if ($response_status eq "ignore")
+   {
+    querybot_log("info","InMessage($from)->run_query(): -- Message ignored ");
+    return -1;
+   } ### if ($response_status eq "ignore") 
+
+  if ($response_status eq "presence")
+   {
+    querybot_log("info","InMessage($from)->run_query(): -- Presence sent");
+    jabber_set_presence(undef,$response);
+    return -1;
+   } ### if ($response_status eq "presence")
+
+  if ($response_status eq "error")
+   {
+    #
+    # Response error message stanza.
+    #
+    sendError(	$message,
+    		$from,
+		$to,
+		$response_status_code,
+		$response);
+
+    querybot_log("info","InMessage($from)->run_query(): -- Error delivered");
+    return -1;
+   } ### if ($response_status eq "error")
+
+
+  #
+  # Update query statistics
+  #
+  $querycount++;
+
+  my $elapsed 			= calculate_elapsed_time($t0);
+  my $ret_msg_with_footer 	= jabber_add_footer($response,$elapsed);
+
+
+my $ret_jabber_send_msg = jabber_send_message($from,$type,$thread,$ret_msg_with_footer);
+querybot_log("info","InMessage($barejid/$digest_jid): Msg \`$type\` in in $elapsed"); 
+ } ### 
+querybot_log("debug","InMessage($barejid): Msg \`$type\` string \`$body\'"); 
+
+ return 0;
+} ### InMessage()
+
+######################################################################
+sub connect_server {
+######################################################################
+
+querybot_log("info","connect_server(): Connecting to $hostname jabber-server");
+
+#
+# Connect to the jabber server
+#
+
+$Querymodule::Con->Connect(
+                hostname		=> $hostname,
+                port			=> $port,
+                timeout			=> $timeout
+	);
+
+#
+# Check the connection
+#
+
+  if ($Querymodule::Con->Connected()) 
+   {
+    querybot_log("info","Connect_server(): Connection successfully");
+   }
+  else
+   {
+    querybot_log("info","Connect_server(): Ooops... no connection for $jid\@$hostname, we're waiting 60 secs ...");
+    
+    for(my $i=0;$i< 60; $i++)
+     {
+      sleep(1);
+     }
+    connect_server();
+   }
+
+# Set the call back functions. This functions will be executed
+# if a message of the types <message/> <iq/> or <presence/>
+# are incomming.
+querybot_log("info","connect_server(): Setting up callbacks");
+$Querymodule::Con->SetCallBacks	(
+  "message" 	=> \&InMessage, 
+  "iq" 		=> \&InIQ, 
+  "presence" 	=> \&InPresence 
+			);
+
+querybot_log("info","connect_server(): Send authentication $jid\@$hostname");
+my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend ( 
+  username=>	$jid,
+  password=>	$password,
+  resource=>	$ressource
+);
+querybot_log("info","connect_server(): Authentication $auth_status");
+
+if ($auth_status ne "ok") {
+die "Authentication status: $auth_status";
+}
+
+}
+######################################################################
+
+
+######################################################################
+sub Stop {
+######################################################################
+
+
+disconnect_server();
+querybot_log("info","Stop(): Exit: 0");
+
+exit(0);
+
+}
+
+######################################################################
+sub disconnect_server {
+######################################################################
+
+querybot_log("info","disconnect_server(): Disconnecting");
+
+$Querymodule::Con->Disconnect;
+
+} ### END of disconnect_server
+
+
+######################################################################
+sub reconnect_server {
+######################################################################
+
+querybot_log("info","reconnect_server(): connection lost, reconnecting...");
+connect_server();
+
+}
+######################################################################
+sub InIQ {
+######################################################################
+
+my $sid 	= shift;
+my $iq		= shift;
+my $from 	= $iq->GetFrom();
+my $barejid	= get_barejid($from);
+
+$stanza_counter_iq++;
+
+querybot_log("debug","InIQ($barejid): received -- ignored");
+
+#
+# increment timer overload
+# 
+if(penalty_handler($barejid) > 0)
+ {
+  #
+  # Do not process message if we are overloaded.
+  #
+  querybot_log("debug","pentalty_handler(): InIQ($barejid):");
+  return undef;
+ }
+
+
+}
+######################################################################
+sub InPresence {
+######################################################################
+
+
+my $sid 		= shift;
+my $presence 		= shift;
+my $from 		= $presence->GetFrom();
+my $barejid		= get_barejid($from);
+my $to 			= $presence->GetTo();
+my $type 		= $presence->GetType();
+my $status 		= $presence->GetStatus();
+my $xml			= $presence->GetXML();
+
+$stanza_counter_presence++;
+
+#
+# increment timer overload
+# 
+if(penalty_handler($barejid) > 0)
+ {
+  #
+  # Do not process message if we are overloaded.
+  #
+  querybot_log("debug","penalty_handler(): Presence($barejid):");
+  return undef;
+ }
+
+#
+# We have a problem in Net::Jabber. An incoming message
+# with a ` in ressource blocks the bot. We will
+# hotfix that for the moment.
+#
+
+if ($from =~ /`/)
+ {
+  querybot_log("info","Presence($barejid): Got ``` -- this is a hotfix, will send unsubscribe");
+  sendPresence($presence,$from,$to,'unsubscribe');
+  sendPresence($presence,$from,$to,'unsubscribed');
+  return 0;
+ } ### END of unless
+
+#
+# A subscription type `subscribe` is incomming. Send `subscribed`
+# tho the user and say hello ;)
+#
+
+if ($type eq 'subscribe')
+	{
+	
+	 #
+	 # Send presence to user
+	 #
+
+         querybot_log("notice","Presence($barejid): Got `subscribe` -- do the same");
+	 sendPresence($presence,$from,$to,'subscribe');
+	 sendPresence($presence,$from,$to,'subscribed');
+
+	} ### END of if ($type eq subscibe
+
+
+#
+# Remove subscription if a user remove this bot from his roster
+#
+
+if ($type eq 'unsubscribe' or $type eq 'unsubscribed')
+        {
+          	querybot_log("notice","Presence($barejid): Got `unsubscribe` -- do the same");
+                sendPresence($presence,$from,$to,'unsubscribe');
+		#
+		# Remove jid from querybot roster
+		#
+		my $IqRemoveJid 	= new Net::XMPP::IQ();
+		$IqRemoveJid->SetTo($barejid);
+		$IqRemoveJid->SetType("set");
+		my $IqRemoveQuery 	= $IqRemoveJid->NewChild("jabber:iq:roster");
+		$IqRemoveQuery		= $IqRemoveQuery->AddItem(	subscription=>"remove",
+		 							jid=>$barejid);
+		$Querymodule::Con->Send($IqRemoveJid);
+          	querybot_log("info","Presence($barejid): Removed `$barejid` from roster");
+		#
+		#
+		# Send unsubscribed to jid
+		#
+                sendPresence($presence,$from,$to,'unsubscribed');
+        }
+}
+
+######################################################################
+sub sendPresence {
+######################################################################
+        my ($pres, $to, $from, $type, $show, $status) = @_;
+
+	#
+	# Send presence information to user
+	#
+
+        $pres->SetType($type);
+        $pres->SetShow($show);
+        $pres->SetStatus($status);
+        $pres->SetTo($to);
+        $pres->SetFrom($from);
+        $Querymodule::Con->Send($pres);
+
+}
+
+
+sub systemcommands {
+
+my $from	= shift;
+my $barejid	= get_barejid($from);
+my $message 	= shift;
+my $type	= shift;
+my $thread	= shift;
+
+#
+# Send help inforation to the bot
+#
+if (($message eq '!help') or ($message eq 'help'))
+{
+  my $help_msg = $bot_description;
+  $help_msg .= "\n
+Bot admin: 
+!help
+!status
+!query off
+!query on
+!penalty workload 5
+!shutdown
+
+Bot support contact xmpp: $bot_admin";
+  querybot_log("info","InMessage($barejid): Help description --  delivered ");
+  return ($help_msg);
+} ### if (($ret_msg eq '!help') or ($ret_msg eq 'help'))
+
+#
+# Send statistics informatin from the bot
+#
+
+if ($message eq '!status')
+{
+  calculate_stats();
+  my $ret_bot_status ="$ident
+---
+Uptime: $uptime_hours h 
+Status: `$bot_status`
+Queries: $msg_per/h 
+";
+if ($barejid eq $bot_admin)
+{
+  $ret_bot_status.="
+Query status: $querystatus
+queries total: $querycount 
+Idle timer: $timer_idle secs 
+Reconnect timer: $timer_reconnect secs 
+Presence timer: $timer_presence secs
+
+Total message stanzas: $stanza_counter_message stanzas
+Total presence stanzas: $stanza_counter_presence stanzas
+Total iq stanzas: $stanza_counter_iq stanzas
+Total stanzas: $stanza_counter_total stanzas
+Total message stanzas/h	: $stanza_counter_message_q stanzas/h
+Total presence stanzas/h: $stanza_counter_presence_q stanzas/h
+Total iq stanzas/h: $stanza_counter_iq_q stanzas/h
+Total stanzas/h: $stanza_counter_total_q stanzas/h
+
+Penalty status: `$penalty_status`
+Penalty timer: $timer_penalty waits
+Stanza penalty calc : $stanza_penalty_calc / $stanza_penalty_calc_default
+Counter penalties: $penalty_counter_penalties
+Counter penalty normal: $penalty_counter_normal
+";
+} ### END of if ($barejid eq $bot_admin)
+return ($ret_bot_status);
+}
+
+#
+# Is it a bot command?
+#
+if($message =~ /!/)
+ {
+  #
+  # Is the bot command from the bot admin?
+  #
+ unless ($bot_admin eq $barejid)
+  {
+   #
+   # If not, send "not allowed"
+   #
+   return ("$message -- not allowed command");
+  }
+ }
+
+#	     return ($ret_bot_status);
+#	}
+
+#
+# Restart the bot. The bot should autostart from your system enviroment ;)
+#
+
+if ($message eq '!shutdown')
+	{
+	disconnect_server();
+	exit(0);
+	}
+
+#
+# Turn queries off. 
+#
+
+if ($message eq '!query off')
+        {
+	$querystatus = 0;
+	#jabber_set_presence("dnd","$bot_msg_maintenance");
+	return ("$ident -- Queries blocked");
+        }
+
+#
+# Turn queries on
+#
+
+if ($message eq '!query on')
+        {
+        $querystatus = 1;
+	#jabber_set_presence(undef,"Back at work...");
+        return ("$ident -- Queries enabled");
+        }
+
+if ($message =~ /!penalty workload/)
+        {
+	my @parameter         = split(/\s/,$message);
+	$stanza_penalty_calc_default = $parameter[2];
+	return ("$ident -- penalty default set to: $stanza_penalty_calc_default");
+        }
+ return $message;
+} ### systemcommands()
+
+sub get_barejid
+ {
+
+   my $jid = shift;
+
+   #
+   # Remove Resource id from jabber-id for example
+   # /Psi
+   #
+
+   my ($barejid)                 = split (/\//, $jid);
+
+   return $barejid;
+
+ } # END of get_barejid
+
+sub calculate_stats
+ {
+
+  # Calculate message statistics
+  $msg_per 		= $querycount / ($uptime/3600);
+
+  $stanza_counter_total 	= $stanza_counter_message + 
+	     				$stanza_counter_iq +
+					$stanza_counter_presence;
+
+  $stanza_counter_total_q 	= $stanza_counter_message_q + 
+	     				$stanza_counter_iq_q +
+					$stanza_counter_presence_q;
+
+  $stanza_counter_total_q	= $stanza_counter_total/($uptime/3600);
+  $stanza_counter_message_q	= $stanza_counter_message/($uptime/3600);
+  $stanza_counter_presence_q	= $stanza_counter_presence/($uptime/3600);
+  $stanza_counter_iq_q		= $stanza_counter_iq/($uptime/3600);
+
+  $msg_per		= sprintf("%.3f",$msg_per);
+
+  $stanza_counter_message_q	
+	     = sprintf("%.3f",$stanza_counter_message_q);
+
+  $stanza_counter_presence_q	
+	     = sprintf("%.3f",$stanza_counter_presence_q);
+
+  $stanza_counter_iq_q	
+	     = sprintf("%.3f",$stanza_counter_iq_q);
+
+  $stanza_counter_total_q
+	     = sprintf("%.3f",$stanza_counter_total_q);
+
+  $uptime_hours 	= $uptime / 3600;
+  $uptime_hours 	= sprintf("%.3f",$uptime_hours);
+
+  $stanza_penalty_calc = 	$stanza_counter_total - 
+    				$stanza_counter_total_penalty;
+
+  if((	$stanza_penalty_calc >= $stanza_penalty_calc_default) 
+  	and $penalty_status eq "normal")
+     {
+      $penalty_counter_penalties++;
+      $penalty_status="penalty";  
+      querybot_log("info","calculate_stats(): Sorry, $ident has heavy workload, please try again later...");
+     } ### if($stanza_penalty_calc >= $stanza_penalty_calc_default)
+
+  if((	$stanza_penalty_calc < $stanza_penalty_calc_default) 
+  	and $penalty_status eq "penalty"
+	and $timer_penalty >=15)
+     {
+      $penalty_counter_normal++;
+      $penalty_status="normal";
+      querybot_log("info","calculate_stats(): Workload is back to normal...");
+     } ### if((  $stanza_penalty_calc < $stanza_penalty_calc_default) ...
+  
+  return 0;
+ } ### calculate_stats
+
+sub jabber_set_presence
+ {
+  my $v_bot_status	= shift;
+  my $status		= shift;
+  my $force		= shift;
+
+  unless($force eq "force")
+   { $force = "none"; }
+  #
+  # Set new presence if we have another presence status
+  # or we have set the force flag (for transport presence).
+  #
+
+  if(($v_bot_status ne $bot_status) or $force eq "force")
+   {
+    $bot_status	= $v_bot_status;
+    if($v_bot_status)
+     {
+      $Querymodule::Con->PresenceSend(	show	=> $v_bot_status,
+					status	=> $status);
+     } ### if($v_bot_status)
+    else
+     {
+      $Querymodule::Con->PresenceSend(status	=> $status);
+     } ### if($v_bot_status)
+   querybot_log("info","jabber_set_presence($v_bot_status,$force): $status");
+   return 0;
+  } ### if($v_bot_status eq $bot_status)
+  return 1;
+ }
+
+sub jabber_send_message
+ {
+  my $from	= shift;
+  my $type	= shift;
+  my $thread	= shift; 
+  my $body	= shift;
+
+  $Querymodule::Con->MessageSend(	to	=>$from,
+  					type 	=>$type,
+                      			body	=>$body,
+					thread	=>$thread,
+                      			priority=>10);
+  return 0;
+ }
+
+sub set_wakeup_mode
+ {
+  querybot_log("info","set_wakeup_mode(): Send presence $bot_status");
+
+  jabber_set_presence("xa","Morning baby, just a minute, then I will work for you... ;)");
+
+  querybot_log("info","set_wakeup_mode(): Get roster");
+
+  $Querymodule::Con->RosterGet();
+  querybot_log("info","set_wakeup_mode(): Wait and see a moment!");
+
+
+ } ### set_wakeup_mode
+
+sub penalty_handler
+#
+# Description:  This function checks if the bot is overloaded
+# 		with incoming mesages and reject if it is.
+#
+ {
+  my $jid	= shift;
+
+  #
+  # Two times that's ok so 2:1 because while in main.
+  #
+
+  if($querystatus == 1 and $penalty_status eq "penalty")
+   {
+    #
+    # Bot admin has everytime access.
+    #
+    if($jid eq $bot_admin)
+     { return 0; }
+    else
+     { 
+      querybot_log("info","penalty_handler($jid): Query not proceeded ($stanza_penalty_calc >= " .
+		"$stanza_penalty_calc_default)");
+      return 1; 
+     } ### if($jid eq $bot_admin)
+   return 0;
+  } ### if($querystatus == 1 and $penalty_status eq "penalty")
+ } ### penalty_handler
+
+sub jabber_add_footer
+#
+# Description:  Add footer to the processed message
+#
+ {
+  my $msg 	= shift;
+  my $elapsed 	= shift;
+
+$msg .= "
+---
+$ident ($release) proceeded in $elapsed sec / IM powered by http://web.swissjabber.ch";
+  return $msg;
+ } ### jabber_add_footer
+
+sub calculate_elapsed_time
+#
+# Description:  Calculate elapsed worktime for a query
+#
+ {
+  my $t0	= shift;
+  my $t1 	= gettimeofday;
+  my $elapsed = $t1 - $t0;
+  $elapsed = sprintf("%.3f",$elapsed);
+  return $elapsed;
+ } ### calculate_elapsed_time
+
+sub sendError 
+#
+# sendError(	$message, 
+# 		$from, 
+# 		$to, 
+# 		404, 
+# 		"text");
+#
+ {
+  
+  my ($msg, $to, $from, $code, $text) = @_;
+
+  $msg->SetType('error');
+  $msg->SetFrom($from);
+  $msg->SetTo($to);
+  $msg->SetErrorCode($code);
+  $msg->SetError($text);
+  $Querymodule::Con->Send($msg);
+ } ### sendError
+
+sub system_load_check
+# check the system load, if it is to high, shutdown connection and wait.
+ {
+  my $ret 	= 2;
+  my $load_ok	= 5;
+  my $load_high	= 6;
+
+  # Calculate system load
+  @system_load  = split (/,/,Sys::CpuLoad::load());
+  my $load_15min = $system_load[0];
+
+  if ($load_15min >= $load_high)
+    {
+    # Load is too high
+    $ret = 1;
+    $system_load_status = 1;
+    }
+  if ($load_15min <= $load_ok  and $system_load_status == 1 or
+  	$system_load_status == 0)
+    {
+    # Load is ok for starting up bot
+    $ret = 0;
+    $system_load_status = 0;
+    }
+
+  querybot_log("debug","system_load_check(): Load 15min: $load_15min return $ret");
+  return $ret;
+ } ### END of system_load_check()
+
+sub connect_bot
+# Connect bot and initialize all timers.
+{
+   querybot_log("info","connect_bot();");
+   connect_server();
+   set_wakeup_mode();
+   $timer_reconnect 	= 0;
+   $timer_presence  	= -10;
+   $timer_idle		= 0;
+}
+
+sub querybot_log
+ {
+
+  # BOT logging function. it loggs to stdout and to syslog
+
+  my $type = shift;
+  my $msg  = shift;
+  
+  unless($type eq "debug")
+   {
+    eval
+     {
+      syslog($type,$msg);
+     };
+    if($@)
+     {
+      syslog($type,"Problem to log a message (possible utf8?) -- ignore\n");
+     }
+   }
+   print "$type ---> $msg\n";
+
+} ### END of querybot_log()

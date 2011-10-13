@@ -1,0 +1,22 @@
+jabber-querybot ----------------------------------------------------------------
+
+
+Check this site for the latest version of this software.
+http://github.com/micressor/jabber-querybot
+
+
+Overview -----------------------------------------------------------------------
+
+
+Check manpage files:
+ jabber-querybot.1
+
+Debian requirements ------------------------------------------------------------
+
+
+apt-get install \
+	libobject-multitype-perl \
+	libauthen-sasl-perl \
+	libdigest-sha1-perl \
+	libxml-parser-perl \
+	libsys-cpuload-perl \
