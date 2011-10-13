@@ -1,0 +1,21 @@
+Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=166
+Upstream-Name: jabber-querybot
+Source: git://github.com/micressor/jabber-querybot.git
+Files: *
+Copyright: 2009 Marco Balmer
+License: GPL
+ aspsms-t is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+ .
+ aspsms-t is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with aspsms-t.  If not, see <http://www.gnu.org/licenses/>.
+ .
+ The Debian packaging is © 2011, Marco Balmer <marco@balmer.name> and
+ is licensed under the GPL, see `/usr/share/common-licenses/GPL-2'.

@@ -1,0 +1,15 @@
+Source: jabber-querybot
+Section: net
+Priority: extra
+Maintainer: Marco Balmer <marco@balmer.name>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.9.2
+Homepage: http://github.com/micressor/jabber-querybot
+Vcs-Git: https://github.com/micressor/jabber-querybot.git
+Vcs-Browser: http://github.com/micressor/jabber-querybot
+
+Package: jabber-querybot
+Architecture: all
+Depends: ${misc:Depends},libnet-jabber-perl,libobject-multitype-perl,libauthen-sasl-perl,libdigest-sha1-perl,libxml-parser-perl,libsys-cpuload-perl
+Description: a modular xmpp/jabber bot
+ This is...
