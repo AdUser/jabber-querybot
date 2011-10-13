@@ -26,16 +26,17 @@ use vars qw(@EXPORT @ISA);
 use Exporter;
 
 @ISA               = qw(Exporter);
-@EXPORT            = qw(run_query $ident $service_name $bot_admin $hostname $port $timeout $jid $password);
+@EXPORT            = qw(run_query $ident $service_name $bot_admin $hostname
+  $port $timeout $user $password);
 
-our $ident		= "Testbot";
-our $service_name	= "\@swissjabber.ch";
-our $bot_admin		= "\@swissjabber.ch";
 our $hostname		= "swissjabber.ch";
-our $jid		= "";
+our $user		= "";
 our $password		= "";
+our $ident		= "Testbot";
+our $bot_admin		= "\@swissjabber.ch";
 our $port		= "5222";
 our $timeout		= "5";
+our $service_name	= "$user\@$hostname";
 our $bot_description	= "Bot help title
 Bot description";
 
@@ -47,7 +48,7 @@ our $stanza_penalty_calc_default = 60;
 sub run_query  #################################################################
  {
   my $msg	 	= shift;
-  my $jid               = shift;
+  my $user              = shift;
   my $bare_jid          = shift;
   my $digest_jid        = shift;
   my $xml_result;
