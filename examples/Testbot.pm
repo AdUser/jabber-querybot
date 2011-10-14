@@ -19,9 +19,7 @@
 package Querymodule;
 
 use strict;
-#use LWP::Simple;
-#use LWP::UserAgent;
-#use URI::URL;
+
 use vars qw(@EXPORT @ISA);
 use Exporter;
 
@@ -29,7 +27,9 @@ use Exporter;
 @EXPORT            = qw(run_query $ident $service_name $bot_admin $hostname
   $port $timeout $user $password);
 
-our $hostname		= "swissjabber.ch";
+our $stanza_penalty_calc_default = 60;
+
+our $hostname		= "jabberserver.tld";
 our $user		= "";
 our $password		= "";
 our $ident		= "Testbot";
@@ -37,13 +37,9 @@ our $bot_admin		= "\@swissjabber.ch";
 our $port		= "5222";
 our $timeout		= "5";
 our $service_name	= "$user\@$hostname";
+my  $useragent_desc     = "jabber-querybot - http://github.com/micressor/jabber-querybot";
 our $bot_description	= "Bot help title
 Bot description";
-
-my  $useragent_desc		 = "jabber-querybot - http://github.com/micressor/jabber-querybot";
-
-our $stanza_penalty_calc_default = 60;
-
 
 sub run_query  #################################################################
  {
@@ -58,13 +54,15 @@ unless ($msg =~ /^[\!\-A-Za-z0-9äöüÄÖÜ\s]*$/)
   return ("error",102,"Some characters are not allowed, please try again.");
  }
 
+  # Do something
   $msg .= " (reply)";
-  #
+
+
   # Return status:
   # error 	= error message stanza
   # presence 	= error as presence stanza
   # ignore	= ignore message
-  #
+
   return (0,0,$msg);
 
  }

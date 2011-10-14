@@ -1,4 +1,10 @@
+2011-10-14 Marco Balmer  <marco@balmer.name>
+
+    * Cleanup examples/Testbot.pm
+
 2011-10-13 Marco Balmer  <marco@balmer.name>
+
+    * Tagging 0.0.1
 
     * Staged for opensource GPL and debian packaging
 
