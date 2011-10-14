@@ -57,6 +57,37 @@ You can control how your jabber response will be:
 .PP
 .B ignore
 = ignore message
+.SH OPTIONS
+.FN jabber-querybot
+has a lot of variables which you can easy modify for your needs:
+.PP
+.B $querystatus = [ 0 | 1 ]
+.PP
+ 0 = Bot will not proceed any incoming jabber messages.
+ 1 = Bot will proceed incoming messages.
+.PP
+.B penalty_status
+.PP
+If the bot has too much workload, it goes to penalty status and wait some 
+time until his status change back to normal.
+.PP
+.B $timer_reconnect_default = 21600
+.PP
+Every 21600 seconds (6 hours) the bot will shutdown automatically, wait 10 
+seconds and starting up again. 
+.PP
+.B $timer_auto_query = 0
+.PP
+If you set in your module this variable to 60, the bot will every 60 seconds
+call the function
+.FN run_auto_query()
+which you may use for several things.
+.PP
+.B System load
+.PP
+If your systems load is >=6, this bot will shutdown the jabber connection 
+and check every 10 seconds systems load. If load <=2, bot will start over.
+.PP
 .SH EXAMPLES
 .PP
 Check example file:
@@ -64,6 +95,9 @@ Check example file:
 .SH FILES
 .FN /etc/jabber\-querybot/Querymodule.pm
  The main jabber\-querybot configuration file
+.PP
+.FN /usr/bin/jabber\-querybot
+ Main perl program.
 .SH AUTHORS
 Written by Marco Balmer
 .PP
