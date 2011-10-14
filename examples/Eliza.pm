@@ -20,6 +20,11 @@ package Querymodule;
 
 use strict;
 
+# This perl modules was not taken into debian packaging. Please install
+# modules manually if they does not work.
+use Chatbot::Eliza;
+my $query = new Chatbot::Eliza;
+
 use vars qw(@EXPORT @ISA);
 use Exporter;
 
@@ -29,42 +34,35 @@ use Exporter;
 
 our $stanza_penalty_calc_default = 60;
 
-our $hostname		= "jabberserver.tld";
+our $hostname		= "";
 our $user		= "";
 our $password		= "";
-our $ident		= "Testbot";
+our $ident		= "elizabot";
 our $bot_admin		= "\@swissjabber.ch";
 our $port		= "5222";
 our $timeout		= "5";
 our $service_name	= "$user\@$hostname";
-my  $useragent_desc     = "jabber-querybot - http://github.com/micressor/jabber-querybot";
-our $bot_description	= "Bot help title
-Bot description";
+our $bot_description	= "Eliza talking bot
+A stupied talking bot";
 
 sub run_query  #################################################################
  {
   my $msg	 	= shift;
-  my $user              = shift;
-  my $bare_jid          = shift;
-  my $digest_jid        = shift;
-  my $xml_result;
+  my $jid		= shift;
+  my $bare_jid		= shift;
+  my $digest_jid	= shift;
 
-unless ($msg =~ /^[\!\-A-Za-z0-9äöüÄÖÜ\s]*$/)
+unless ($msg =~ /^[\-A-Za-z0-9\?\!\.\,\'\s]*$/)
  {
-  return ("error",102,"Some characters are not allowed, please try again.");
+  return ("error",406,"Some characters are not allowed, please try again.");
  }
 
-  # Do something
-  $msg .= " (reply)";
+
+my $answer  = $query->transform($msg);
 
 
-  # Return status:
-  # error 	= error message stanza
-  # presence 	= error as presence stanza
-  # ignore	= ignore message
 
-  return (0,0,$msg);
-
+return (0,0,$answer);
  }
 
 1;
