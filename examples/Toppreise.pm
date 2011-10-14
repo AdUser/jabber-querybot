@@ -20,6 +20,8 @@ package Querymodule;
 
 use strict;
 
+# This perl modules was not taken into debian packaging. Please install
+# modules manually if they does not work.
 use LWP::Simple;
 use LWP::UserAgent;
 use URI::URL;
