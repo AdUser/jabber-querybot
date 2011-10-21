@@ -1,11 +1,6 @@
 jabber-querybot (0.0.2-1) unstable; urgency=low
 
+  * Initial release (Closes: #645266)
   * New 0.0.2 upstream release
 
- -- Marco Balmer <marco@balmer.name>  Fri, 14 Oct 2011 17:21:56 +0200
-
-jabber-querybot (0.0.1-1) unstable; urgency=low
-
-  * Initial release (Closes: #645266)
-
- -- Marco Balmer <marco@balmer.name>  Thu, 13 Oct 2011 23:18:12 +0200
+ -- Marco Balmer <marco@balmer.name>  Fri, 21 Oct 2011 12:10:57 +0200
