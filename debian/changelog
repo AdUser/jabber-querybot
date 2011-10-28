@@ -1,3 +1,9 @@
+jabber-querybot (0.0.2-2) unstable; urgency=low
+
+  * debian/copyright: Fix license GPL-2+ to GPL-3+
+
+ -- Marco Balmer <marco@balmer.name>  Fri, 28 Oct 2011 08:14:31 +0200
+
 jabber-querybot (0.0.2-1) unstable; urgency=low
 
   * Initial release (Closes: #645266)
