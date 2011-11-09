@@ -30,7 +30,7 @@ use utf8;
 
 ### CONFIGURATION ###
 use Querymodule;
-my $release = "0.0.1";
+my $release = "0.0.4";
 ### CONFIGURATION ###
 
 $SIG{KILL}      = \&Stop;
