@@ -1,0 +1,6 @@
+# Only if Querymodule.pm is not present, we link it to an example bot.
+if [ ! -r /etc/jabber-querybot/Querymodule.pm ];
+then
+  ln -s /usr/share/doc/jabber-querybot/examples/Testbot.pm \
+    /etc/jabber-querybot/Querymodule.pm
+fi
