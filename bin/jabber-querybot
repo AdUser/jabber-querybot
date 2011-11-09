@@ -106,6 +106,7 @@ my @system_load 		= "";
 my $system_load_status 		= "0";  # 0 = System load is ok
 					# 1 = system load is too high
 
+check_before_start();
 
 querybot_log("info","Init(): Startup $ident...");
 
@@ -1007,3 +1008,18 @@ sub querybot_log
    print "$type ---> $msg\n";
 
 } ### END of querybot_log()
+
+sub check_before_start 
+# Check necessary settings before starting up
+{
+unless ($service_name and 
+	$ident and
+	$hostname and
+	$port and
+	$user and
+	$password) 
+{ print "Please check settings (service_name, ident, hostname, port, user
+or password at /etc/jabber-querybot/Querymodule.pm\n"; 
+  exit(1); }
+}
+

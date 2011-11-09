@@ -11,12 +11,9 @@ Overview -----------------------------------------------------------------------
 Check manpage files:
  jabber-querybot.1
 
-Debian requirements ------------------------------------------------------------
+Debian -------------------------------------------------------------------------
 
 
-apt-get install \
-	libobject-multitype-perl \
-	libauthen-sasl-perl \
-	libdigest-sha1-perl \
-	libxml-parser-perl \
-	libsys-cpuload-perl \
+Jabber-querybot ist available in debian:
+
+apt-get install jabber-querybot
