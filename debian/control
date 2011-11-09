@@ -10,7 +10,7 @@ Vcs-Browser: http://github.com/micressor/jabber-querybot
 
 Package: jabber-querybot
 Architecture: all
-Depends: ${misc:Depends},libnet-jabber-perl,libobject-multitype-perl,libauthen-sasl-perl,libdigest-sha-perl,libxml-parser-perl,libsys-cpuload-perl
+Depends: ${misc:Depends},libnet-jabber-perl,libauthen-sasl-perl,libdigest-sha-perl,libxml-parser-perl,libsys-cpuload-perl
 Description: Modular xmpp/jabber bot
  You can easy write bots and use it over the jabber network.
  .
