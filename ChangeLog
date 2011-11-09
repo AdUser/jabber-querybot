@@ -1,3 +1,7 @@
+2011-11-08 Marco Balmer  <marco@balmer.name>
+
+    * Check configuration settings before starting up
+
 2011-10-14 Marco Balmer  <marco@balmer.name>
 
     * Cleanup examples/Testbot.pm
