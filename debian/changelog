@@ -1,8 +1,9 @@
 jabber-querybot (0.0.4-1) unstable; urgency=low
 
   * New 0.0.4 upstream release
-  * Removed not necessary depends: libauthen-sasl-perl,libdigest-sha-perl
-  * debian/postinst: Link config file to prevent compile error
+  * Depends remove: libauthen-sasl-perl,libdigest-sha-perl
+  * Depends add: libxml-smart-perl
+  * debian/postinst: Link config file to prevent execute error
 
  -- Marco Balmer <marco@balmer.name>  Wed, 09 Nov 2011 13:38:11 +0100
 
