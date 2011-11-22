@@ -20,6 +20,11 @@ package Querymodule;
 
 use strict;
 
+use lib "/usr/share/jabber-querybot/lib";
+use Mail;
+use Log;
+
+
 use vars qw(@EXPORT @ISA);
 use Exporter;
 
@@ -57,11 +62,17 @@ unless ($msg =~ /^[\!\-A-Za-z0-9äöüÄÖÜ\s]*$/)
   # Do something
   $msg .= " (reply)";
 
+  # For sending an e-mail
+  # send_mail(from,to,subject,body);
+
+  #send_mail("email\@adress.com","to\@mail.com","subject","body");
 
   # Return status:
   # error 	= error message stanza
   # presence 	= error as presence stanza
   # ignore	= ignore message
+
+
 
   return (0,0,$msg);
 
