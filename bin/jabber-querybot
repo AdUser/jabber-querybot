@@ -17,20 +17,26 @@
 # along with Querybot. If not, see <http://www.gnu.org/licenses/>.
 
 use strict;
+
 use lib "/etc/jabber-querybot";
+use lib "/usr/share/jabber-querybot/lib";
+
 use Net::XMPP qw(Client Message);
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use Time::HiRes qw(gettimeofday);
 use Sys::Syslog;
 use Sys::CpuLoad;
 use XML::Smart;
-use DBI;
 use Encode;
 use utf8;
 
+# jabber-querybot modules
+use Log;
+use Mail;
+
 ### CONFIGURATION ###
 use Querymodule;
-my $release = "0.0.4";
+my $release = "0.0.5";
 ### CONFIGURATION ###
 
 $SIG{KILL}      = \&Stop;
@@ -986,28 +992,6 @@ sub connect_bot
    $timer_idle		= 0;
 }
 
-sub querybot_log
- {
-
-  # BOT logging function. it loggs to stdout and to syslog
-
-  my $type = shift;
-  my $msg  = shift;
-  
-  unless($type eq "debug")
-   {
-    eval
-     {
-      syslog($type,$msg);
-     };
-    if($@)
-     {
-      syslog($type,"Problem to log a message (possible utf8?) -- ignore\n");
-     }
-   }
-   print "$type ---> $msg\n";
-
-} ### END of querybot_log()
 
 sub check_before_start 
 # Check necessary settings before starting up

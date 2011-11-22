@@ -1,3 +1,7 @@
+2011-11-22 Marco Balmer  <marco@balmer.name>
+
+    * Make send_mail() and querybot_log() for written modules available
+
 2011-11-08 Marco Balmer  <marco@balmer.name>
 
     * Check configuration settings before starting up
