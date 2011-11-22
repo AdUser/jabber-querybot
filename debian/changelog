@@ -1,3 +1,10 @@
+jabber-querybot (0.0.5-1) unstable; urgency=low
+
+  * New 0.0.5 upstream release
+  * d/jabber-querybot.install: New lib/ files added
+
+ -- Marco Balmer <marco@balmer.name>  Tue, 22 Nov 2011 10:39:48 +0100
+
 jabber-querybot (0.0.4-1) unstable; urgency=low
 
   * New 0.0.4 upstream release

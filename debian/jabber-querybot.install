@@ -1,1 +1,3 @@
 bin/jabber-querybot usr/bin
+bin/Mail.pm usr/share/jabber-querybot/lib
+bin/Log.pm usr/share/jabber-querybot/lib
