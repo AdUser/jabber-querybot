@@ -3,15 +3,16 @@
 set -e
 
 # Can be removed, when 0.0.5.1-1 is migrated to stable.
-if [ -L /etc/jabber-querybot/Querymodule.pm ] && \
-   [ "$1" = "upgrade" ] && \
-   [ "$2" = "0.0.4-1" ];
-then
-  if [ /etc/jabber-querybot/Querymodule.pm -ef \
-    /usr/share/doc/jabber-querybot/examples/Testbot.pm ];
-  then
-    rm /etc/jabber-querybot/Querymodule.pm
-  fi
-fi
+case "$1" in
+  upgrade|install)
+    if dpkg --compare-versions "$2" lt 0.0.5.1-1; then
+      if [ /etc/jabber-querybot/Querymodule.pm -ef
+/usr/share/doc/jabber-querybot/examples/Testbot.pm ];
+      then
+        rm /etc/jabber-querybot/Querymodule.pm
+      fi
+    fi
+  ;;
+esac
 
 ##DEBHELPER##
