@@ -1,3 +1,7 @@
+2011-11-23 Marco Balmer  <marco@balmer.name>
+
+    * Rename examples/Testbot.pm to examples/Querymodule.pm
+
 2011-11-22 Marco Balmer  <marco@balmer.name>
 
     * Make send_mail() and querybot_log() for written modules available
