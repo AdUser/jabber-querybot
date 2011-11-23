@@ -2,6 +2,7 @@ jabber-querybot (0.0.5.1-1) unstable; urgency=low
 
   * New 0.0.5.1 upstream release
   * d/jabber-querybot.install: New lib/ etc/ files added
+  * d/postinst: Removed
 
  -- Marco Balmer <marco@balmer.name>  Wed, 23 Nov 2011 07:37:40 +0100
 
