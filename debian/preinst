@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+# Explanation from Didier Raboud <odyx@debian.org>:
+#
+# - you have to cleanup after the faulty postinst that reached the
+#   archive in jabber-querybot 0.0.4-1 (and I plea guilty for this). If
+#   you just "drop" the postinst without making sure the symlink that it
+#   added is properly removed, then it will end up with that situation:
+#
+#$  ls -la /etc/jabber-querybot/
+#total 12
+#drwxr-xr-x  2 root root 4096 Nov 23 09:42 .
+#drwxr-xr-x 43 root root 4096 Nov 23 09:37 ..
+#lrwxrwxrwx  1 root root   50 Nov 23 09:38 Querymodule.pm ->
+#/usr/share/doc/jabber-querybot/examples/Testbot.pm
+#-rwxr-xr-x  1 root root 2133 Nov 23 06:33 Querymodule.pm.dpkg-new
+
+if [ -L /etc/jabber-querybot/Querymodule.pm ];
+then
+  rm /etc/jabber-querybot/Querymodule.pm
+fi
+
+##DEBHELPER##
