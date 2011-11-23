@@ -7,8 +7,8 @@ if [ -L /etc/jabber-querybot/Querymodule.pm ] && \
    [ "$1" = "upgrade" ] && \
    [ "$2" = "0.0.4-1" ];
 then
-  if ls -l /etc/jabber-querybot/Querymodule.pm | grep -q \
-    "/usr/share/doc/jabber-querybot/examples/Testbot.pm";
+  if [ /etc/jabber-querybot/Querymodule.pm -ef \
+    /usr/share/doc/jabber-querybot/examples/Testbot.pm ];
   then
     rm /etc/jabber-querybot/Querymodule.pm
   fi
