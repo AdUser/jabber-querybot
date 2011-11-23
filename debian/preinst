@@ -2,7 +2,7 @@
 
 set -e
 
-# Can be removed, when 0.0.5-1 is migrated to stable.
+# Can be removed, when 0.0.5.1-1 is migrated to stable.
 if [ -L /etc/jabber-querybot/Querymodule.pm ] && \
    [ "$1" = "upgrade" ] && \
    [ "$2" = "0.0.4-1" ];
