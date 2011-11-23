@@ -4,15 +4,16 @@ jabber-querybot (0.0.5.1-1) unstable; urgency=low
   * d/jabber-querybot.install: New lib/ etc/ files added
   * d/postinst: Removed
   * d/preinst: Fix for previous d/postinst in unstable
+  * d/control: Depends remove: libauthen-sasl-perl,libdigest-sha-perl
+  * d/control: Depends add: libxml-smart-perl
 
- -- Marco Balmer <marco@balmer.name>  Wed, 23 Nov 2011 11:34:42 +0100
+ -- Marco Balmer <marco@balmer.name>  Wed, 23 Nov 2011 14:15:42 +0100
 
 jabber-querybot (0.0.4-1) unstable; urgency=low
 
   * New 0.0.4 upstream release
-  * Depends remove: libauthen-sasl-perl,libdigest-sha-perl
-  * Depends add: libxml-smart-perl
-  * debian/postinst: Link config file to prevent execute error
+  * Removed not necessary depends: libauthen-sasl-perl,libdigest-sha-perl
+  * debian/postinst: Link config file to prevent compile error
 
  -- Marco Balmer <marco@balmer.name>  Wed, 09 Nov 2011 13:38:11 +0100
 
