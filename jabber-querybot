@@ -3,6 +3,8 @@
 # This file is part of Querybot (-a modular perl jabber bot)
 # http://github.com/micressor/jabber-querybot
 #
+# Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+#
 # Querybot is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -16,10 +18,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Querybot. If not, see <http://www.gnu.org/licenses/>.
 
+=head1 NAME
+
+jabber-querybot - a modular perl jabber bot
+
+=head1 METHODS
+
+=cut
+
 use strict;
 
 use lib "/etc/jabber-querybot";
 use lib "/usr/share/jabber-querybot/lib";
+use lib "./lib"; # that we can compile locally.
 
 use Net::XMPP qw(Client Message);
 use Digest::MD5 qw(md5 md5_hex md5_base64);
@@ -31,12 +42,13 @@ use Encode;
 use utf8;
 
 # jabber-querybot modules
-use Log;
-use Mail;
+use JabberQuerybot;
+#use Log;
+#use Mail;
 
 ### CONFIGURATION ###
 use Querymodule;
-my $release = "0.0.5";
+my $release = "0.1.0";
 ### CONFIGURATION ###
 
 $SIG{KILL}      = \&Stop;
@@ -1007,3 +1019,11 @@ or password at /etc/jabber-querybot/Querymodule.pm\n";
   exit(1); }
 }
 
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+
+The Debian packaging is licensed under the 
+GPL, see `/usr/share/common-licenses/GPL-3'.
+
+=cut

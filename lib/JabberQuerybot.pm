@@ -1,7 +1,8 @@
-#!/usr/bin/perl
 #
 # This file is part of Querybot (-a modular perl jabber bot)
 # http://github.com/micressor/jabber-querybot
+#
+# Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
 #
 # Querybot is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,16 +17,74 @@
 # You should have received a copy of the GNU General Public License
 # along with Querybot. If not, see <http://www.gnu.org/licenses/>.
 
-package Mail;
+package JabberQuerybot;
 
+=head1 NAME
+
+JabberQuerybot - Modular xmpp/jabber bot
+
+=cut
+
+use 5.010001;
 use strict;
-use vars qw(@EXPORT @ISA);
-use Exporter;
-use Log;
+use warnings;
+
+require Exporter;
+
+our @ISA = qw(Exporter);
+
+# Items to export into callers namespace by default. Note: do not export
+# names by default without a very good reason. Use EXPORT_OK instead.
+# Do not simply export all your public functions/methods/constants.
+
+# This allows declaration	use JabberQuerybot ':all';
+# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
+# will save memory.
+our %EXPORT_TAGS = ( 'all' => [ qw(
+	
+) ] );
+
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+
+our @EXPORT = qw(
+querybot_log
+send_mail
+	
+);
+
+our $VERSION = '0.1.0';
+
+
+# Preloaded methods go here.
+
+use Sys::Syslog;
+
+sub querybot_log
+ {
+
+  # BOT logging function. it loggs to stdout and to syslog
+
+  my $type = shift;
+  my $msg  = shift;
+  
+  unless($type eq "debug")
+   {
+    eval
+     {
+      syslog($type,$msg);
+     };
+    if($@)
+     {
+      syslog($type,"Problem to log a message (possible utf8?) -- ignore\n");
+     }
+   }
+   print "$type ---> $msg\n";
+
+} ### END of querybot_log()
+
+
 use Net::SMTP;
 
-@ISA               = qw(Exporter);
-@EXPORT            = qw( send_mail );
 $SIG{ALRM}      = sub { die "Unexepted Timeout" };
 
 sub send_mail
@@ -88,3 +147,14 @@ eval {
   return 0;
  } ### send_mail
 1;
+
+1;
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+
+The Debian packaging is licensed under the 
+GPL, see `/usr/share/common-licenses/GPL-3'.
+
+=cut

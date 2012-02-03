@@ -1,3 +1,9 @@
+
+2012-02-03 Marco Balmer  <marco@balmer.name>
+
+    * Migrating to a native module
+    * Create pod documentation
+
 2011-11-23 Marco Balmer  <marco@balmer.name>
 
     * Rename examples/Testbot.pm to examples/Querymodule.pm
