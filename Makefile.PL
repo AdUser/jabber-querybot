@@ -6,7 +6,14 @@ WriteMakefile(
  NAME             => 'JabberQuerybot',
  VERSION_FROM     => 'lib/JabberQuerybot.pm', # finds $VERSION
  PREREQ_PM        => {
-			Net::Jabber }, # e.g., Module::Name => 1.1
+			Net::Jabber,
+			Net::XMPP,
+			Digest::MD5,
+			Time::HiRes,
+			Sys::Syslog,
+			Sys::CpuLoad,
+			XML::Smart,
+			Encode }, # e.g., Module::Name => 1.1
  ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
   (ABSTRACT_FROM  => 'lib/JabberQuerybot.pm', # retrieve abstract from module
    AUTHOR         => 'Marco balmer <marco@balmer.name>') : ()),
@@ -18,3 +25,4 @@ WriteMakefile(
   'examples/Woerterbuch.pm'    => 'blib/man3/Woerterbuch.3pm',
   'examples/Eliza.pm'    => 'blib/man3/Eliza.3pm' }
 );
+

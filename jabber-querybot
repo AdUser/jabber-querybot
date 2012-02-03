@@ -37,8 +37,9 @@ lot of examples and experiences are implemented.
 2. Create a bot application:
 
 =over 4
- cd /usr/share/doc/jabber-querybot/examples
- cp Testbot.pm /etc/jabber-querybot/Mybot.pm
+
+ cd examples
+ cp Querymodule.pm /etc/jabber-querybot/Mybot.pm
  cd /etc/jabber-querybot
  ln -s Mybot.pm Querymodule.pm
 
@@ -50,7 +51,7 @@ vim Mybot.pm
 
 =over 4
 
-  our $hostname	   = "swissjabber.ch";
+  our $hostname	       = "swissjabber.ch";
   our $user            = "";
   our $password        = "";
   our $ident           = "Testbot";
@@ -136,8 +137,7 @@ http://github.com/micressor/jabber-querybot/
 use strict;
 
 use lib "/etc/jabber-querybot";
-#use lib "/usr/share/jabber-querybot/lib";
-use lib "./lib"; # that we can compile locally.
+use lib "./lib"; 			# that we can compile locally.
 
 use Net::XMPP qw(Client Message);
 use Digest::MD5 qw(md5 md5_hex md5_base64);
@@ -1175,7 +1175,7 @@ sub jabber_add_footer
   my $msg 	= shift;
   my $elapsed 	= shift;
 
-=head jabber_add_footer()
+=head2 jabber_add_footer()
 
 Add footer to the processed message.
 
