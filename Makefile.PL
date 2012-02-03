@@ -19,10 +19,10 @@ WriteMakefile(
    AUTHOR         => 'Marco balmer <marco@balmer.name>') : ()),
  MAN1PODS         => {
   'jabber-querybot'    => 'blib/man1/jabber-querybot.1p',
-  'examples/Telsearch.pm'    => 'blib/man3/Telsearch.3p',
-  'examples/querytest.pl'    => 'blib/man3/Querytest.3p',
-  'examples/Toppreise.pm'    => 'blib/man3/Toppreise.3p',
-  'examples/Woerterbuch.pm'    => 'blib/man3/Woerterbuch.3p',
-  'examples/Eliza.pm'    => 'blib/man3/Eliza.3p' }
+  'examples/Telsearch.pm'    => 'blib/man1/Telsearch.1p',
+  'examples/querytest.pl'    => 'blib/man1/Querytest.1p',
+  'examples/Toppreise.pm'    => 'blib/man1/Toppreise.1p',
+  'examples/Woerterbuch.pm'    => 'blib/man1/Woerterbuch.1p',
+  'examples/Eliza.pm'    => 'blib/man1/Eliza.1p' }
 );
 
