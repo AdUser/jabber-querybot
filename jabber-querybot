@@ -181,7 +181,7 @@ if ($Querymodule::stanza_penalty_calc_default)
  {
    $stanza_penalty_calc_default	= $Querymodule::stanza_penalty_calc_default;
  } ### if ($Querymodule::stanza_penalty_calc_default)
-my $ressource			= $ident;
+my $resource			= $ident;
 my $bot_work_message		= "$ident workload is normal";
 my $bot_idle_message		= "$ident is waiting for queries";
 my $bot_msg_maintenance		= "Sorry, $ident is temporary in maintenance.";
@@ -472,7 +472,7 @@ if (($type eq 'normal' or $type eq '' or $type eq 'chat')
 	and ($querystatus==1 or ($bot_admin eq $barejid))) 
  {
  
-  # If timer_presence is < 0 and a stanza is incomming, querystatus will
+  # If timer_presence is < 0 and a stanza is incoming, querystatus will
   # never go to 1. 
   if($timer_presence > 0 and $penalty_status eq "normal")
    {
@@ -605,7 +605,7 @@ $Querymodule::Con->Connect(
 
 Set the call back functions. This functions will be executed
 if a message of the types <message/> <iq/> or <presence/>
-are incomming.
+are incoming.
 
 =cut
 
@@ -620,7 +620,7 @@ querybot_log("info","connect_server(): Send authentication $user\@$hostname");
 my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend ( 
   username=>	$user,
   password=>	$password,
-  resource=>	$ressource
+  resource=>	$resource
 );
 querybot_log("info","connect_server(): Authentication $auth_status");
 
@@ -750,7 +750,7 @@ if(penalty_handler($barejid) > 0)
 
 =head2
 
-We have a problem in Net::Jabber. An incoming message with a ` in ressource 
+We have a problem in Net::Jabber. An incoming message with a ` in resource 
 blocks the bot. We will hotfix that for the moment.
 
 =cut
@@ -765,7 +765,7 @@ if ($from =~ /`/)
 
 =head2
 
-A subscription type `subscribe` is incomming. Send `subscribed` tho the user 
+A subscription type `subscribe` is incoming. Send `subscribed` tho the user 
 and say hello ;)
 
 =cut
@@ -987,7 +987,7 @@ sub get_barejid
 
 =head2 get_barejid()
 
-Remove ressource id from a jabber id.
+Remove resource id from a jabber id.
 
 =cut
 
