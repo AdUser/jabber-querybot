@@ -11,5 +11,10 @@ WriteMakefile(
   (ABSTRACT_FROM  => 'lib/JabberQuerybot.pm', # retrieve abstract from module
    AUTHOR         => 'Marco balmer <marco@balmer.name>') : ()),
  MAN1PODS         => {
-  'jabber-querybot'    => 'blib/man1/jabber-querybot.1' }
+  'jabber-querybot'    => 'blib/man1/jabber-querybot.1',
+  'examples/Telsearch.pm'    => 'blib/man3/Telsearch.3pm',
+  'examples/querytest.pl'    => 'blib/man3/Querytest.3pl',
+  'examples/Toppreise.pm'    => 'blib/man3/Toppreise.3pm',
+  'examples/Woerterbuch.pm'    => 'blib/man3/Woerterbuch.3pm',
+  'examples/Eliza.pm'    => 'blib/man3/Eliza.3pm' }
 );

@@ -3,6 +3,8 @@
 # This file is part of querybot (-a modular perl jabber bot)
 # http://github.com/micressor/jabber-querybot
 #
+# Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+#
 # Querybot is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,8 +22,23 @@ package Querymodule;
 
 use strict;
 
-# This perl modules was not taken into debian packaging. Please install
-# modules manually if they does not work.
+=head1 NAME
+
+jabber-querybot - toppreise.ch
+
+=head1 DESCRIPTION
+
+This example works *and* need access rights from toppreise.ch administrators.
+Access to this API is restricted.
+
+=head1 RESSOURCES
+
+http://www.toppreise.ch
+
+http://www.toppreise.ch/im/imQuery.php/
+
+=cut
+
 use LWP::Simple;
 use LWP::UserAgent;
 use URI::URL;
@@ -35,8 +52,6 @@ use Exporter;
 
 our $stanza_penalty_calc_default = 60;
 
-# This example works *and* need access rights from toppreise.ch administrators.
-# Access to this API is restricted.
 
 our $hostname		= "jabberserver.tld";
 our $user		= "";
@@ -82,3 +97,12 @@ return (0,0,$url_response);
 }
 
 1;
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+
+The Debian packaging is licensed under the 
+GPL, see `/usr/share/common-licenses/GPL-3'.
+
+=cut
