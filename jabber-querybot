@@ -22,6 +22,113 @@
 
 jabber-querybot - a modular perl jabber bot
 
+=head1 DESCRIPTION
+
+jabber-querybot connects a jabber account and wait for messages. If a message
+comes in, it forward it to your self programmend modul. The return string of
+your module, jabber-querybot send it back to the jabber sender.
+
+It is designed to be re-usable and to make it easy to write small
+Jabber bots that do one thing and do it well. A simple concept with a
+lot of examples and experiences are implemented.
+
+1. Create a jabber account on a jabber-server around
+
+2. Create a bot application:
+
+=over 4
+ cd /usr/share/doc/jabber-querybot/examples
+ cp Testbot.pm /etc/jabber-querybot/Mybot.pm
+ cd /etc/jabber-querybot
+ ln -s Mybot.pm Querymodule.pm
+
+=back 
+
+Modify login parameters to your jabber-bot-account
+
+vim Mybot.pm
+
+=over 4
+
+  our $hostname	   = "swissjabber.ch";
+  our $user            = "";
+  our $password        = "";
+  our $ident           = "Testbot";
+  our $bot_admin       = "\@swissjabber.ch";
+  our $port            = "5222";
+  our $timeout         = "5";
+  our $service_name    = "$user\@$hostname";
+  our $bot_description = "Bot help title
+  Bot description";
+
+=back
+
+For each jabber message, jabber-querybot will execute sub run_query,
+that you can write here your application.
+
+You can control how your jabber response will be:
+
+=over 4
+
+=item * error = error message stanza
+
+=item * presence = error as presence stanza
+
+=item * ignore = ignore message
+
+=back
+
+=head1 OPTIONS
+
+jabber-querybot has a lot of variables which you can easy modify for 
+what you need:
+
+=head2 querystatus
+
+$querystatus = [ 0 | 1 ]
+
+=over 4
+
+=item * 0 = Bot will not proceed any incoming jabber messages.
+
+=item * 1 = Bot will proceed incoming messages.
+
+=back
+
+=head2 penalty_status
+
+If the bot has too much workload, it goes to penalty status and wait some 
+time until his status change back to normal.
+
+$timer_reconnect_default = 21600
+
+Every 21600 seconds (6 hours) the bot will shutdown automatically, wait 10 
+seconds and starting up again. 
+
+$timer_auto_query = 0
+
+If you set in your module this variable to 60, the bot will every 60 seconds
+call the function run_auto_query() which you may use for several things.
+
+=head2 System load
+
+If your systems load is >=6, this bot will shutdown the jabber connection 
+and check every 10 seconds systems load. If load <=2, bot will start over.
+
+=head1 EXAMPLES
+
+/usr/share/doc/jabber-querybot/examples/Testbot.pm
+
+=head1 FILES
+
+/etc/jabber-querybot/Querymodule.pm
+
+/usr/bin/jabber-querybot
+
+=head1 RESOURCES
+
+http://github.com/micressor/jabber-querybot/
+
 =head1 METHODS
 
 =cut
@@ -29,7 +136,7 @@ jabber-querybot - a modular perl jabber bot
 use strict;
 
 use lib "/etc/jabber-querybot";
-use lib "/usr/share/jabber-querybot/lib";
+#use lib "/usr/share/jabber-querybot/lib";
 use lib "./lib"; # that we can compile locally.
 
 use Net::XMPP qw(Client Message);
@@ -43,8 +150,6 @@ use utf8;
 
 # jabber-querybot modules
 use JabberQuerybot;
-#use Log;
-#use Mail;
 
 ### CONFIGURATION ###
 use Querymodule;
@@ -220,35 +325,53 @@ while ($Querymodule::Con)
 ### End of Main-Script ###
 
 sub InMessage
-
-#
-# A message come in ;)
-#
 {
 
-#
-# Read parameters of incoming stanza
-#
+=head2 InMessage()
+
+An incoming jabber message to the bot will hook this function.
+
+=over 2
+
+=item * Read parameters of incoming stanza
+
+=back 
+
+=cut
+
 my $t0 			= gettimeofday;
 my $sid			= shift;
 my $message		= shift;
 my $from                = $message->GetFrom();
-#
-# Decode utf8
-#
+
+=head2
+
+=over 2
+
+=item * Decode utf8 string
+
+=back
+
+=cut
+
 my $from_utf8_decoded	= encode("utf8", $from);
 my $barejid             = get_barejid($from_utf8_decoded);
 
 $stanza_counter_message++;
 
-#
-# increment timer overload
-# 
+=head2
+
+=over 2
+
+=item * increment timer overload and do not process message if bot is 
+overloaded.
+
+=back 
+
+=cut
+
 if(penalty_handler($barejid) > 0)
  {
-  #
-  # Do not process message if we are overloaded.
-  #
   return undef;
  }
 
@@ -259,18 +382,32 @@ my $subject             = $message->GetSubject();
 my $type                = $message->GetType();
 my $thread		= $message->GetThread();
 
-#
-# Ignore message if it is from myself
-#
+=head2
+
+=over 2
+
+=item * Ignore message if it is from myself
+
+=back
+
+=cut
 
 if($service_name eq $barejid)
  {
   querybot_log("info","InMessage(): Msg from myself -- ignored");
   return -1;
  } ### if($service_name eq $barejid)
-#
-# Check if it is a system message from an other transport
-#
+
+=head2
+
+=over 2
+
+=item * Be sure, that it is not a message from another transport
+
+=back
+
+=cut
+
 unless($barejid =~ /\@/)
  {
  querybot_log("info","InMessage($barejid): System msg (without @) -- ignored ");
@@ -282,10 +419,15 @@ if($body eq "")
  return 0;
  } ### if($body eq "")
 
+=head2
 
-#
-# Check any systemcommands for the BOT
-#
+=over 2
+
+=item * Check any systemcommands for the bot
+
+=back
+
+=cut
 
 my ($ret_msg);
 if($body =~ /!/ or $body eq "help")
@@ -298,9 +440,15 @@ if($body =~ /!/ or $body eq "help")
   return 0;
  } ### unless($barejid eq $bot_admin)
 
-#
-# A message is incomming, if the bot is sleeping, change the status to work
-#
+=head2
+
+=over 2
+
+=item * If the bot has sleeping status, change it to work
+
+=back
+
+=cut
 
 unless ($querystatus == 0)
 {
@@ -310,22 +458,22 @@ if ($bot_status eq 'away')
  } ### if ($bot_status eq 'away')
 } ### END of unless($querystatus ....
 
-#
-# Process only normal text or chat messages
-#
+=head2
+
+=over 2
+
+=item * We process only normal text or chat type jabber messages
+
+=back
+
+=cut
 
 if (($type eq 'normal' or $type eq '' or $type eq 'chat') 
 	and ($querystatus==1 or ($bot_admin eq $barejid))) 
  {
  
-  #
-  # Execute the query run_query()
-  #
-
-  #
   # If timer_presence is < 0 and a stanza is incomming, querystatus will
   # never go to 1. 
-  #
   if($timer_presence > 0 and $penalty_status eq "normal")
    {
     jabber_set_presence(undef,$bot_work_message);
@@ -339,18 +487,22 @@ my (	$response,
 	$s_proceeded
    );
 
-  #
-  # EXECUTE query
-  #
+=head2
+
+=over 2
+
+=item * And now we give the real text string which was incoming to the
+bot via run_query().
+
+=item * If run_query() say us 'ignore` we do a log entry and do not answer
+via jabber to the user.
+
+=back
+
+=cut
+
   ($response_status,$response_status_code,$response,$s_proceeded) 
   = run_query($body,$from,$barejid,$digest_jid,$subject);
-  #
-  # END EXECUTE query
-  #
-
-  #
-  # Check if response is to ignore and do it
-  #
 
   if ($response_status eq "ignore")
    {
@@ -367,9 +519,18 @@ my (	$response,
 
   if ($response_status eq "error")
    {
-    #
-    # Response error message stanza.
-    #
+
+=head2
+
+=over 2
+
+=item * If run_query() says 'error` we send a jabber error stanza wiht the
+status message from run_query() back to the user.
+
+=back
+
+=cut
+
     sendError(	$message,
     		$from,
 		$to,
@@ -381,9 +542,17 @@ my (	$response,
    } ### if ($response_status eq "error")
 
 
-  #
-  # Update query statistics
-  #
+=head2
+
+=over 2
+
+=item * If there was no error, we update the statistic vars and send the
+answer from run_query() back to the jabber user.
+
+=back
+
+=cut
+
   $querycount++;
 
   my $elapsed 			= calculate_elapsed_time($t0);
@@ -404,19 +573,18 @@ sub connect_server {
 
 querybot_log("info","connect_server(): Connecting to $hostname jabber-server");
 
-#
-# Connect to the jabber server
-#
+=head2 connect_server()
+
+This function connects to the jabber server with the given credentials from
+Querymodule.pm.
+
+=cut
 
 $Querymodule::Con->Connect(
                 hostname		=> $hostname,
                 port			=> $port,
                 timeout			=> $timeout
 	);
-
-#
-# Check the connection
-#
 
   if ($Querymodule::Con->Connected()) 
    {
@@ -433,9 +601,14 @@ $Querymodule::Con->Connect(
     connect_server();
    }
 
-# Set the call back functions. This functions will be executed
-# if a message of the types <message/> <iq/> or <presence/>
-# are incomming.
+=head2
+
+Set the call back functions. This functions will be executed
+if a message of the types <message/> <iq/> or <presence/>
+are incomming.
+
+=cut
+
 querybot_log("info","connect_server(): Setting up callbacks");
 $Querymodule::Con->SetCallBacks	(
   "message" 	=> \&InMessage, 
@@ -463,6 +636,11 @@ die "Authentication status: $auth_status";
 sub Stop {
 ######################################################################
 
+=head2 Stop()
+
+Shutdown jabber connection and exit main program
+
+=cut
 
 disconnect_server();
 querybot_log("info","Stop(): Exit: 0");
@@ -475,6 +653,12 @@ exit(0);
 sub disconnect_server {
 ######################################################################
 
+=head2 disconnect_server()
+
+Only disconnect from the jabber-server.
+
+=cut
+
 querybot_log("info","disconnect_server(): Disconnecting");
 
 $Querymodule::Con->Disconnect;
@@ -485,6 +669,12 @@ $Querymodule::Con->Disconnect;
 ######################################################################
 sub reconnect_server {
 ######################################################################
+
+=head2 reconnect_server()
+
+Reconnect and create a log entry.
+
+=cut
 
 querybot_log("info","reconnect_server(): connection lost, reconnecting...");
 connect_server();
@@ -498,6 +688,13 @@ my $sid 	= shift;
 my $iq		= shift;
 my $from 	= $iq->GetFrom();
 my $barejid	= get_barejid($from);
+
+=head2 InIQ()
+
+We do not proceed any iq (information query), this is only for 
+statisic.
+
+=cut
 
 $stanza_counter_iq++;
 
@@ -531,25 +728,32 @@ my $type 		= $presence->GetType();
 my $status 		= $presence->GetStatus();
 my $xml			= $presence->GetXML();
 
+=head2 InPresence()
+
+=over 2
+
+=item * Increment timer overload
+
+=item * Do not process message if we are overloaded penalty_handler().
+
+=back
+
+=cut
+
 $stanza_counter_presence++;
 
-#
-# increment timer overload
-# 
 if(penalty_handler($barejid) > 0)
  {
-  #
-  # Do not process message if we are overloaded.
-  #
   querybot_log("debug","penalty_handler(): Presence($barejid):");
   return undef;
  }
 
-#
-# We have a problem in Net::Jabber. An incoming message
-# with a ` in ressource blocks the bot. We will
-# hotfix that for the moment.
-#
+=head2
+
+We have a problem in Net::Jabber. An incoming message with a ` in ressource 
+blocks the bot. We will hotfix that for the moment.
+
+=cut
 
 if ($from =~ /`/)
  {
@@ -559,17 +763,25 @@ if ($from =~ /`/)
   return 0;
  } ### END of unless
 
-#
-# A subscription type `subscribe` is incomming. Send `subscribed`
-# tho the user and say hello ;)
-#
+=head2
+
+A subscription type `subscribe` is incomming. Send `subscribed` tho the user 
+and say hello ;)
+
+=cut
 
 if ($type eq 'subscribe')
 	{
 	
-	 #
-	 # Send presence to user
-	 #
+=head2
+
+=over 2
+
+=item * Send presence to user
+
+=back
+
+=cut
 
          querybot_log("notice","Presence($barejid): Got `subscribe` -- do the same");
 	 sendPresence($presence,$from,$to,'subscribe');
@@ -577,10 +789,15 @@ if ($type eq 'subscribe')
 
 	} ### END of if ($type eq subscibe
 
+=head2
 
-#
-# Remove subscription if a user remove this bot from his roster
-#
+=over 2
+
+=item * Remove subscription if a user remove this bot from his roster
+
+=back
+
+=cut
 
 if ($type eq 'unsubscribe' or $type eq 'unsubscribed')
         {
@@ -610,9 +827,11 @@ sub sendPresence {
 ######################################################################
         my ($pres, $to, $from, $type, $show, $status) = @_;
 
-	#
-	# Send presence information to user
-	#
+=head2 sendPresence()
+
+Send presence information to user
+
+=cut
 
         $pres->SetType($type);
         $pres->SetShow($show);
@@ -632,9 +851,16 @@ my $message 	= shift;
 my $type	= shift;
 my $thread	= shift;
 
-#
-# Send help inforation to the bot
-#
+=head2 systemcommands()
+
+=over 2
+
+=item * If user type '!help` send a help instruction to the user
+
+=back
+
+=cut
+
 if (($message eq '!help') or ($message eq 'help'))
 {
   my $help_msg = $bot_description;
@@ -652,9 +878,15 @@ Bot support contact xmpp: $bot_admin";
   return ($help_msg);
 } ### if (($ret_msg eq '!help') or ($ret_msg eq 'help'))
 
-#
-# Send statistics informatin from the bot
-#
+=head2
+
+=over 2
+
+=item * Send statistic information to the user if he types '!status`
+
+=back
+
+=cut
 
 if ($message eq '!status')
 {
@@ -693,29 +925,31 @@ Counter penalty normal: $penalty_counter_normal
 return ($ret_bot_status);
 }
 
-#
-# Is it a bot command?
-#
+=head2
+
+=over 2
+
+=item * Is it a bot command?
+
+=item * Is the bot command from the bot admin? If not, send "not allowed"
+
+=item * '!shutdown` will shutdown your bot via jabber invoke.
+
+=item * '!query off` turn off queries
+
+=item * '!query on` turn on queries
+
+=back
+
+=cut
+
 if($message =~ /!/)
  {
-  #
-  # Is the bot command from the bot admin?
-  #
  unless ($bot_admin eq $barejid)
   {
-   #
-   # If not, send "not allowed"
-   #
    return ("$message -- not allowed command");
   }
  }
-
-#	     return ($ret_bot_status);
-#	}
-
-#
-# Restart the bot. The bot should autostart from your system enviroment ;)
-#
 
 if ($message eq '!shutdown')
 	{
@@ -723,20 +957,12 @@ if ($message eq '!shutdown')
 	exit(0);
 	}
 
-#
-# Turn queries off. 
-#
-
 if ($message eq '!query off')
         {
 	$querystatus = 0;
 	#jabber_set_presence("dnd","$bot_msg_maintenance");
 	return ("$ident -- Queries blocked");
         }
-
-#
-# Turn queries on
-#
 
 if ($message eq '!query on')
         {
@@ -759,10 +985,11 @@ sub get_barejid
 
    my $user = shift;
 
-   #
-   # Remove Resource id from jabber-id for example
-   # /Psi
-   #
+=head2 get_barejid()
+
+Remove ressource id from a jabber id.
+
+=cut
 
    my ($barejid)                 = split (/\//, $user);
 
@@ -773,7 +1000,12 @@ sub get_barejid
 sub calculate_stats
  {
 
-  # Calculate message statistics
+=head2 calcualte_stats()
+
+Calculate message statistics
+
+=cut
+
   $msg_per 		= $querycount / ($uptime/3600);
 
   $stanza_counter_total 	= $stanza_counter_message + 
@@ -837,10 +1069,13 @@ sub jabber_set_presence
 
   unless($force eq "force")
    { $force = "none"; }
-  #
-  # Set new presence if we have another presence status
-  # or we have set the force flag (for transport presence).
-  #
+
+=head2 jabber_set_presence()
+
+Set new presence if we have another presence status or we have set the force 
+flag (for transport presence).
+
+=cut
 
   if(($v_bot_status ne $bot_status) or $force eq "force")
    {
@@ -867,6 +1102,13 @@ sub jabber_send_message
   my $thread	= shift; 
   my $body	= shift;
 
+=head2 jabber_send_message()
+
+This function send all jabber messages which are outgoing from the 
+jabber-querybot.
+
+=cut
+
   $Querymodule::Con->MessageSend(	to	=>$from,
   					type 	=>$type,
                       			body	=>$body,
@@ -877,6 +1119,13 @@ sub jabber_send_message
 
 sub set_wakeup_mode
  {
+
+=head2 set_wakeup_mode()
+
+Set jabber presence via jabber_set_presence()
+
+=cut
+
   querybot_log("info","set_wakeup_mode(): Send presence $bot_status");
 
   jabber_set_presence("xa","Morning baby, just a minute, then I will work for you... ;)");
@@ -890,22 +1139,25 @@ sub set_wakeup_mode
  } ### set_wakeup_mode
 
 sub penalty_handler
-#
-# Description:  This function checks if the bot is overloaded
-# 		with incoming mesages and reject if it is.
-#
  {
   my $user	= shift;
 
-  #
-  # Two times that's ok so 2:1 because while in main.
-  #
+=head2 penalty_handler()
+
+This function checks if the bot is overloaded with incoming mesages and 
+reject if it is. Two times that's ok so 2:1 because while in main.
+
+=cut
 
   if($querystatus == 1 and $penalty_status eq "penalty")
    {
-    #
-    # Bot admin has everytime access.
-    #
+
+=head2
+
+Bot admin got everytime an answer.
+
+=cut
+
     if($user eq $bot_admin)
      { return 0; }
     else
@@ -919,12 +1171,15 @@ sub penalty_handler
  } ### penalty_handler
 
 sub jabber_add_footer
-#
-# Description:  Add footer to the processed message
-#
  {
   my $msg 	= shift;
   my $elapsed 	= shift;
+
+=head jabber_add_footer()
+
+Add footer to the processed message.
+
+=cut
 
 $msg .= "
 ---
@@ -933,28 +1188,32 @@ $ident ($release) proceeded in $elapsed sec";
  } ### jabber_add_footer
 
 sub calculate_elapsed_time
-#
-# Description:  Calculate elapsed worktime for a query
-#
  {
   my $t0	= shift;
   my $t1 	= gettimeofday;
+
+=head2 calcualte_elapsed_time()
+
+Calculate elapsed worktime for a query
+
+=cut
+
   my $elapsed = $t1 - $t0;
   $elapsed = sprintf("%.3f",$elapsed);
   return $elapsed;
  } ### calculate_elapsed_time
 
 sub sendError 
-#
-# sendError(	$message, 
-# 		$from, 
-# 		$to, 
-# 		404, 
-# 		"text");
-#
  {
   
   my ($msg, $to, $from, $code, $text) = @_;
+
+=head2 sendError()
+
+sendError($message, $from, $to, 404, "text");
+
+=cut
+
 
   $msg->SetType('error');
   $msg->SetFrom($from);
@@ -970,6 +1229,20 @@ sub system_load_check
   my $ret 	= 2;
   my $load_ok	= 5;
   my $load_high	= 6;
+
+=head2 system_load_check()
+
+=over 2
+
+=item * Calculate system load
+
+=item * If load is too high shutdown bot.
+
+=item * If load is ok, starting up bot
+
+=back
+
+=cut
 
   # Calculate system load
   @system_load  = split (/,/,Sys::CpuLoad::load());
@@ -994,8 +1267,14 @@ sub system_load_check
  } ### END of system_load_check()
 
 sub connect_bot
-# Connect bot and initialize all timers.
 {
+
+=head2 connect_bot()
+
+Connect bot and initialize all timers.
+
+=cut
+
    querybot_log("info","connect_bot();");
    connect_server();
    set_wakeup_mode();
@@ -1008,6 +1287,15 @@ sub connect_bot
 sub check_before_start 
 # Check necessary settings before starting up
 {
+
+
+=head2 check_before_start()
+
+Check configuration variables in Querybotmodule.pm and give answer if anything
+does not match or is missing.
+
+=cut
+
 unless ($service_name and 
 	$ident and
 	$hostname and
