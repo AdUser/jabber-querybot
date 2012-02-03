@@ -472,7 +472,7 @@ if (($type eq 'normal' or $type eq '' or $type eq 'chat')
 	and ($querystatus==1 or ($bot_admin eq $barejid))) 
  {
  
-  # If timer_presence is < 0 and a stanza is incomming, querystatus will
+  # If timer_presence is < 0 and a stanza is incoming, querystatus will
   # never go to 1. 
   if($timer_presence > 0 and $penalty_status eq "normal")
    {
@@ -605,7 +605,7 @@ $Querymodule::Con->Connect(
 
 Set the call back functions. This functions will be executed
 if a message of the types <message/> <iq/> or <presence/>
-are incomming.
+are incoming.
 
 =cut
 
@@ -765,7 +765,7 @@ if ($from =~ /`/)
 
 =head2
 
-A subscription type `subscribe` is incomming. Send `subscribed` tho the user 
+A subscription type `subscribe` is incoming. Send `subscribed` tho the user 
 and say hello ;)
 
 =cut
