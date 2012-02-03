@@ -4,7 +4,7 @@ set -e
 
 # Can be removed, when 0.0.5.1-1 is migrated to stable.
 case "$1" in
-  upgrade|install)
+  upgrade)
     if dpkg --compare-versions "$2" lt 0.0.5.1-1; then
       if [ /etc/jabber-querybot/Querymodule.pm -ef
 /usr/share/doc/jabber-querybot/examples/Testbot.pm ];

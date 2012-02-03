@@ -1,6 +1,10 @@
 jabber-querybot (0.1.0-1) unstable; urgency=low
 
   * New 0.1.0 upstream files
+  * d/dirs: Remove usr/share/jabber-querybot/lib
+  * d/jabber-querybot.install: Removed files which are installed with 
+    Makefile.PL
+  * d/preinst: Exec only during upgrade case
 
  -- Marco Balmer <marco@balmer.name>  Fri, 03 Feb 2012 22:26:46 +0100
 
