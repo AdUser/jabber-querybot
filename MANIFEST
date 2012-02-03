@@ -1,0 +1,13 @@
+ChangeLog
+COPYING
+examples/Eliza.pm
+examples/Querymodule.pm
+examples/querytest.pl
+examples/Telsearch.pm
+examples/Toppreise.pm
+examples/Woerterbuch.pm
+jabber-querybot
+lib/JabberQuerybot.pm
+Makefile.PL
+MANIFEST
+README
