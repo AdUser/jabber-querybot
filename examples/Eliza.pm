@@ -3,6 +3,8 @@
 # This file is part of querybot (-a modular perl jabber bot)
 # http://github.com/micressor/jabber-querybot
 #
+# Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+#
 # Querybot is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,8 +22,26 @@ package Querymodule;
 
 use strict;
 
-# This perl modules was not taken into debian packaging. Please install
-# modules manually if they does not work.
+=head1 NAME
+
+jabber-querybot - eliza module
+
+=head1 DESCRIPTION
+
+This perl modules was not taken into debian packaging. Please install 
+modules manually if they does not work.
+
+use Chatbot::Eliza;
+
+my $query = new Chatbot::Eliza;
+
+=head1 RESSOURCES
+
+http://packages.qa.debian.org/c/chatbot-eliza.html
+
+=cut
+
+
 use Chatbot::Eliza;
 my $query = new Chatbot::Eliza;
 
@@ -66,3 +86,12 @@ return (0,0,$answer);
  }
 
 1;
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
+
+The Debian packaging is licensed under the 
+GPL, see `/usr/share/common-licenses/GPL-3'.
+
+=cut
