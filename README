@@ -14,6 +14,6 @@ Check manpage files:
 Debian -------------------------------------------------------------------------
 
 
-Jabber-querybot ist available in debian:
+Jabber-querybot is available in debian:
 
 apt-get install jabber-querybot
