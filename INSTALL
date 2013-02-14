@@ -1,0 +1,116 @@
+=head1 NAME
+
+jabber-querybot - a modular perl jabber bot
+
+=head1 DESCRIPTION
+
+jabber-querybot connects a jabber account and wait for messages. If a message
+comes in, it forward it to your self programmend modul. The return string of
+your module, jabber-querybot send it back to the jabber sender.
+
+It is designed to be re-usable and to make it easy to write small
+Jabber bots that do one thing and do it well. A simple concept with a
+lot of examples and experiences are implemented.
+
+1. Create a jabber account on a jabber-server around
+
+2. Create a bot application:
+
+=over 4
+
+ cd examples
+ cp Querymodule.pm /etc/jabber-querybot/Mybot.pm
+ cd /etc/jabber-querybot
+ ln -s Mybot.pm Querymodule.pm
+
+=back
+
+Modify login parameters to your jabber-bot-account
+
+vim Mybot.pm
+
+=over 4
+
+  our $hostname	       = "swissjabber.ch";
+  our $user            = "";
+  our $password        = "";
+  our $ident           = "Testbot";
+  our $bot_admin       = "\@swissjabber.ch";
+  our $port            = "5222";
+  our $timeout         = "5";
+  our $service_name    = "$user\@$hostname";
+  our $bot_description = "Bot help title
+  Bot description";
+
+=back
+
+For each jabber message, jabber-querybot will execute sub run_query,
+that you can write here your application.
+
+You can control how your jabber response will be:
+
+=over 4
+
+=item * error = error message stanza
+
+=item * presence = error as presence stanza
+
+=item * ignore = ignore message
+
+=back
+
+=head1 OPTIONS
+
+jabber-querybot has a lot of variables which you can easy modify for
+what you need:
+
+=head2 querystatus
+
+$querystatus = [ 0 | 1 ]
+
+=over 4
+
+=item * 0 = Bot will not proceed any incoming jabber messages.
+
+=item * 1 = Bot will proceed incoming messages.
+
+=back
+
+=head2 penalty_status
+
+If the bot has too much workload, it goes to penalty status and wait some
+time until his status change back to normal.
+
+$timer_reconnect_default = 21600
+
+Every 21600 seconds (6 hours) the bot will shutdown automatically, wait 10
+seconds and starting up again.
+
+$timer_auto_query = 0
+
+If you set in your module this variable to 60, the bot will every 60 seconds
+call the function run_auto_query() which you may use for several things.
+
+=head2 System load
+
+If your systems load is >=6, this bot will shutdown the jabber connection
+and check every 10 seconds systems load. If load <=2, bot will start over.
+
+=head1 EXAMPLES
+
+/usr/share/doc/jabber-querybot/examples/Testbot.pm
+
+=head1 FILES
+
+/etc/jabber-querybot/Querymodule.pm
+
+/usr/bin/jabber-querybot
+
+=head1 RESOURCES
+
+http://github.com/micressor/jabber-querybot/
+
+=head1 METHODS
+
+=cut
+
