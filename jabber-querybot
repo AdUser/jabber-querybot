@@ -21,7 +21,7 @@
 use strict;
 
 use lib "/etc/jabber-querybot";
-use lib "./lib"; 			# that we can compile locally.
+use lib "./lib"; # that we can compile locally.
 
 use Net::XMPP qw(Client Message);
 use Digest::MD5 qw(md5 md5_hex md5_base64);
@@ -35,83 +35,75 @@ use utf8;
 # jabber-querybot modules
 use JabberQuerybot;
 
-### CONFIGURATION ###
+### BEGIN CONFIGURATION ###
 use Querymodule;
 my $release = "0.1.0";
-### CONFIGURATION ###
+
+my $ident                        = $Querymodule::ident;
+my $service_name                 = $Querymodule::service_name;
+my $bot_admin                    = $Querymodule::bot_admin;
+my $hostname                     = $Querymodule::hostname;
+my $port                         = $Querymodule::port;
+my $user                         = $Querymodule::user;
+my $password                     = $Querymodule::password;
+my $timeout                      = $Querymodule::timeout;
+my $timer_auto_query_run         = $Querymodule::timer_auto_query;
+my $status_auto_query            = $Querymodule::status_auto_query;
+my $stanza_penalty_calc_default  = 60;
+my $resource                     = "$ident";
+my $bot_work_message             = "$ident workload is normal";
+my $bot_idle_message             = "$ident is waiting for queries";
+my $bot_msg_maintenance          = "Sorry, $ident is temporary in maintenance.";
+my $bot_description              = $Querymodule::bot_description;
+
+### END CONFIGURATION ###
 
 $SIG{KILL}      = \&Stop;
 $SIG{TERM}      = \&Stop;
 $SIG{INT}       = \&Stop;
 
-$Querymodule::Con
-	= new Net::XMPP::Client(debuglevel=>0,debugfile=>"stdout");
-
-
-### BEGIN CONFIGURATION ###
-
-my $ident			= $Querymodule::ident;
-my $service_name		= $Querymodule::service_name;
-my $bot_admin			= $Querymodule::bot_admin;
-my $hostname			= $Querymodule::hostname;
-my $port			= $Querymodule::port;
-my $user			= $Querymodule::user;
-my $password			= $Querymodule::password;
-my $timeout			= $Querymodule::timeout;
-my $timer_auto_query_run	= $Querymodule::timer_auto_query;
-my $status_auto_query		= $Querymodule::status_auto_query;
-my $stanza_penalty_calc_default	= 60;
-if ($Querymodule::stanza_penalty_calc_default)
- {
-   $stanza_penalty_calc_default	= $Querymodule::stanza_penalty_calc_default;
- } ### if ($Querymodule::stanza_penalty_calc_default)
-my $resource			= $ident;
-my $bot_work_message		= "$ident workload is normal";
-my $bot_idle_message		= "$ident is waiting for queries";
-my $bot_msg_maintenance		= "Sorry, $ident is temporary in maintenance.";
-my $bot_description		= $Querymodule::bot_description;
-
-### END CONFIGURATION ###
-
-
 ### Start of Main-Script ###
 
-openlog($ident,"","local0");
-
 my $Con_stat;
-my $querystatus 		= 0;
-my $querycount			= 0;
-my $uptime			= 0;
-my $timer_presence		= -10;
-my $timer_idle			= 0;
-my $timer_reconnect		= 0;
-my $timer_penalty		= 0;
-my $bot_status			= "";
-my $penalty_status		= "normal";
-my $penalty_counter_penalties	= "0";
-my $penalty_counter_normal	= "0";
-my $msg_per			= 0;
-my $uptime_hours		= 0;
-my $stanza_counter_total	= 0;
-my $stanza_counter_total_penalty= 0;
-my $stanza_counter_total_q	= 0;
-my $stanza_counter_message	= 0;
-my $stanza_counter_message_q	= 0;
-my $stanza_counter_presence	= 0;
-my $stanza_counter_presence_q	= 0;
-my $stanza_counter_iq		= 0;
-my $stanza_counter_iq_q		= 0;
-my $stanza_penalty_calc		= 0;
+my $querystatus                  = 0;
+my $querycount                   = 0;
+my $uptime                       = 0;
+my $timer_presence               = -10;
+my $timer_idle                   = 0;
+my $timer_reconnect              = 0;
+my $timer_penalty                = 0;
+my $bot_status                   = "";
+my $penalty_status               = "normal";
+my $penalty_counter_penalties    = 0;
+my $penalty_counter_normal       = 0;
+my $msg_per                      = 0;
+my $uptime_hours                 = 0;
+my $stanza_counter_total         = 0;
+my $stanza_counter_total_penalty = 0;
+my $stanza_counter_total_q       = 0;
+my $stanza_counter_message       = 0;
+my $stanza_counter_message_q     = 0;
+my $stanza_counter_presence      = 0;
+my $stanza_counter_presence_q    = 0;
+my $stanza_counter_iq            = 0;
+my $stanza_counter_iq_q          = 0;
+my $stanza_penalty_calc          = 0;
+my $timer_idle_default           = 3600;
+my $timer_presence_default       = 7200;
+my $timer_reconnect_default      = 21600;
+my $timer_auto_query             = 0;
+my @system_load                  = "";
+my $system_load_status           = "0";  # system load: 0 - ok, 1 - too high
 
-my $timer_idle_default		= 3600;
-my $timer_presence_default 	= 7200;
-my $timer_reconnect_default	= 21600;
+$Querymodule::Con = new Net::XMPP::Client(debuglevel => 0,
+                                          debugfile  => "stdout");
 
+if ($Querymodule::stanza_penalty_calc_default)
+{
+  $stanza_penalty_calc_default = $Querymodule::stanza_penalty_calc_default;
+}
 
-my $timer_auto_query		= 0;
-my @system_load 		= "";
-my $system_load_status 		= "0";  # 0 = System load is ok
-					# 1 = system load is too high
+openlog($ident, "", "local0");
 
 check_before_start();
 
@@ -119,7 +111,7 @@ querybot_log("info","Init(): Startup $ident...");
 
 while(system_load_check() ne 0)
 {
-  querybot_log("info","main->system_load_check(): Load to high, will not start");
+  querybot_log("info", "main->system_load_check(): Load to high, will not start");
   sleep 10
 }
 
