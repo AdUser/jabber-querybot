@@ -43,7 +43,7 @@ lot of examples and experiences are implemented.
  cd /etc/jabber-querybot
  ln -s Mybot.pm Querymodule.pm
 
-=back 
+=back
 
 Modify login parameters to your jabber-bot-account
 
@@ -81,7 +81,7 @@ You can control how your jabber response will be:
 
 =head1 OPTIONS
 
-jabber-querybot has a lot of variables which you can easy modify for 
+jabber-querybot has a lot of variables which you can easy modify for
 what you need:
 
 =head2 querystatus
@@ -98,13 +98,13 @@ $querystatus = [ 0 | 1 ]
 
 =head2 penalty_status
 
-If the bot has too much workload, it goes to penalty status and wait some 
+If the bot has too much workload, it goes to penalty status and wait some
 time until his status change back to normal.
 
 $timer_reconnect_default = 21600
 
-Every 21600 seconds (6 hours) the bot will shutdown automatically, wait 10 
-seconds and starting up again. 
+Every 21600 seconds (6 hours) the bot will shutdown automatically, wait 10
+seconds and starting up again.
 
 $timer_auto_query = 0
 
@@ -113,7 +113,7 @@ call the function run_auto_query() which you may use for several things.
 
 =head2 System load
 
-If your systems load is >=6, this bot will shutdown the jabber connection 
+If your systems load is >=6, this bot will shutdown the jabber connection
 and check every 10 seconds systems load. If load <=2, bot will start over.
 
 =head1 EXAMPLES
@@ -160,7 +160,7 @@ $SIG{KILL}      = \&Stop;
 $SIG{TERM}      = \&Stop;
 $SIG{INT}       = \&Stop;
 
-$Querymodule::Con	
+$Querymodule::Con
 	= new Net::XMPP::Client(debuglevel=>0,debugfile=>"stdout");
 
 
@@ -242,7 +242,7 @@ while(system_load_check() ne 0)
 connect_bot();
 
 # Loop until we're finished.
-while ($Querymodule::Con) 
+while ($Querymodule::Con)
  {
  reconnect_server() unless defined($Querymodule::Con->Process(1));
  $timer_presence++;
@@ -280,7 +280,7 @@ while ($Querymodule::Con)
   $timer_penalty=0;
   $stanza_counter_total_penalty = $stanza_counter_total;
   } ### if($timer_penalty > 60)
- 
+
  if($timer_reconnect >= $timer_reconnect_default and $querystatus == 1)
   {
    querybot_log("info","reconnect_mode(): Execute...");
@@ -290,7 +290,7 @@ while ($Querymodule::Con)
    connect_bot();
    querybot_log("info","reconnect_mode(): Done");
   } ### END of if($timer_reconnect....
- 
+
  #
  # Change presence status only, if queries are enabled
  #
@@ -335,7 +335,7 @@ An incoming jabber message to the bot will hook this function.
 
 =item * Read parameters of incoming stanza
 
-=back 
+=back
 
 =cut
 
@@ -363,10 +363,10 @@ $stanza_counter_message++;
 
 =over 2
 
-=item * increment timer overload and do not process message if bot is 
+=item * increment timer overload and do not process message if bot is
 overloaded.
 
-=back 
+=back
 
 =cut
 
@@ -432,7 +432,7 @@ if($body eq "")
 my ($ret_msg);
 if($body =~ /!/ or $body eq "help")
  {
-  ($ret_msg) 		= systemcommands($from, $body,$type,$thread); 
+  ($ret_msg) 		= systemcommands($from, $body,$type,$thread);
   my $elapsed 		= calculate_elapsed_time($t0);
   my $ret_msg_footer 	= jabber_add_footer($ret_msg,$elapsed);
   querybot_log("info","InMessage($barejid): Admin command `$body` --  processed");
@@ -468,12 +468,12 @@ if ($bot_status eq 'away')
 
 =cut
 
-if (($type eq 'normal' or $type eq '' or $type eq 'chat') 
-	and ($querystatus==1 or ($bot_admin eq $barejid))) 
+if (($type eq 'normal' or $type eq '' or $type eq 'chat')
+	and ($querystatus==1 or ($bot_admin eq $barejid)))
  {
- 
+
   # If timer_presence is < 0 and a stanza is incoming, querystatus will
-  # never go to 1. 
+  # never go to 1.
   if($timer_presence > 0 and $penalty_status eq "normal")
    {
     jabber_set_presence(undef,$bot_work_message);
@@ -501,14 +501,14 @@ via jabber to the user.
 
 =cut
 
-  ($response_status,$response_status_code,$response,$s_proceeded) 
+  ($response_status,$response_status_code,$response,$s_proceeded)
   = run_query($body,$from,$barejid,$digest_jid,$subject);
 
   if ($response_status eq "ignore")
    {
     querybot_log("info","InMessage($from)->run_query(): -- Message ignored ");
     return -1;
-   } ### if ($response_status eq "ignore") 
+   } ### if ($response_status eq "ignore")
 
   if ($response_status eq "presence")
    {
@@ -560,9 +560,9 @@ answer from run_query() back to the jabber user.
 
 
 my $ret_jabber_send_msg = jabber_send_message($from,$type,$thread,$ret_msg_with_footer);
-querybot_log("info","InMessage($barejid/$digest_jid): Msg \`$type\` in in $elapsed"); 
- } ### 
-querybot_log("debug","InMessage($barejid): Msg \`$type\` string \`$body\'"); 
+querybot_log("info","InMessage($barejid/$digest_jid): Msg \`$type\` in in $elapsed");
+ } ###
+querybot_log("debug","InMessage($barejid): Msg \`$type\` string \`$body\'");
 
  return 0;
 } ### InMessage()
@@ -586,14 +586,14 @@ $Querymodule::Con->Connect(
                 timeout			=> $timeout
 	);
 
-  if ($Querymodule::Con->Connected()) 
+  if ($Querymodule::Con->Connected())
    {
     querybot_log("info","Connect_server(): Connection successfully");
    }
   else
    {
     querybot_log("info","Connect_server(): Ooops... no connection for $user\@$hostname, we're waiting 60 secs ...");
-    
+
     for(my $i=0;$i< 60; $i++)
      {
       sleep(1);
@@ -611,13 +611,13 @@ are incoming.
 
 querybot_log("info","connect_server(): Setting up callbacks");
 $Querymodule::Con->SetCallBacks	(
-  "message" 	=> \&InMessage, 
-  "iq" 		=> \&InIQ, 
-  "presence" 	=> \&InPresence 
+  "message" 	=> \&InMessage,
+  "iq" 		=> \&InIQ,
+  "presence" 	=> \&InPresence
 			);
 
 querybot_log("info","connect_server(): Send authentication $user\@$hostname");
-my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend ( 
+my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend (
   username=>	$user,
   password=>	$password,
   resource=>	$resource
@@ -691,7 +691,7 @@ my $barejid	= get_barejid($from);
 
 =head2 InIQ()
 
-We do not proceed any iq (information query), this is only for 
+We do not proceed any iq (information query), this is only for
 statisic.
 
 =cut
@@ -702,7 +702,7 @@ querybot_log("debug","InIQ($barejid): received -- ignored");
 
 #
 # increment timer overload
-# 
+#
 if(penalty_handler($barejid) > 0)
  {
   #
@@ -750,7 +750,7 @@ if(penalty_handler($barejid) > 0)
 
 =head2
 
-We have a problem in Net::Jabber. An incoming message with a ` in resource 
+We have a problem in Net::Jabber. An incoming message with a ` in resource
 blocks the bot. We will hotfix that for the moment.
 
 =cut
@@ -765,14 +765,14 @@ if ($from =~ /`/)
 
 =head2
 
-A subscription type `subscribe` is incoming. Send `subscribed` tho the user 
+A subscription type `subscribe` is incoming. Send `subscribed` tho the user
 and say hello ;)
 
 =cut
 
 if ($type eq 'subscribe')
 	{
-	
+
 =head2
 
 =over 2
@@ -865,7 +865,7 @@ if (($message eq '!help') or ($message eq 'help'))
 {
   my $help_msg = $bot_description;
   $help_msg .= "\n
-Bot admin: 
+Bot admin:
 !help
 !status
 !query off
@@ -893,17 +893,17 @@ if ($message eq '!status')
   calculate_stats();
   my $ret_bot_status ="$ident
 ---
-Uptime: $uptime_hours h 
+Uptime: $uptime_hours h
 Status: `$bot_status`
-Queries: $msg_per/h 
+Queries: $msg_per/h
 ";
 if ($barejid eq $bot_admin)
 {
   $ret_bot_status.="
 Query status: $querystatus
-queries total: $querycount 
-Idle timer: $timer_idle secs 
-Reconnect timer: $timer_reconnect secs 
+queries total: $querycount
+Idle timer: $timer_idle secs
+Reconnect timer: $timer_reconnect secs
 Presence timer: $timer_presence secs
 
 Total message stanzas: $stanza_counter_message stanzas
@@ -1008,11 +1008,11 @@ Calculate message statistics
 
   $msg_per 		= $querycount / ($uptime/3600);
 
-  $stanza_counter_total 	= $stanza_counter_message + 
+  $stanza_counter_total 	= $stanza_counter_message +
 	     				$stanza_counter_iq +
 					$stanza_counter_presence;
 
-  $stanza_counter_total_q 	= $stanza_counter_message_q + 
+  $stanza_counter_total_q 	= $stanza_counter_message_q +
 	     				$stanza_counter_iq_q +
 					$stanza_counter_presence_q;
 
@@ -1023,13 +1023,13 @@ Calculate message statistics
 
   $msg_per		= sprintf("%.3f",$msg_per);
 
-  $stanza_counter_message_q	
+  $stanza_counter_message_q
 	     = sprintf("%.3f",$stanza_counter_message_q);
 
-  $stanza_counter_presence_q	
+  $stanza_counter_presence_q
 	     = sprintf("%.3f",$stanza_counter_presence_q);
 
-  $stanza_counter_iq_q	
+  $stanza_counter_iq_q
 	     = sprintf("%.3f",$stanza_counter_iq_q);
 
   $stanza_counter_total_q
@@ -1038,18 +1038,18 @@ Calculate message statistics
   $uptime_hours 	= $uptime / 3600;
   $uptime_hours 	= sprintf("%.3f",$uptime_hours);
 
-  $stanza_penalty_calc = 	$stanza_counter_total - 
+  $stanza_penalty_calc = 	$stanza_counter_total -
     				$stanza_counter_total_penalty;
 
-  if((	$stanza_penalty_calc >= $stanza_penalty_calc_default) 
+  if((	$stanza_penalty_calc >= $stanza_penalty_calc_default)
   	and $penalty_status eq "normal")
      {
       $penalty_counter_penalties++;
-      $penalty_status="penalty";  
+      $penalty_status="penalty";
       querybot_log("info","calculate_stats(): Sorry, $ident has heavy workload, please try again later...");
      } ### if($stanza_penalty_calc >= $stanza_penalty_calc_default)
 
-  if((	$stanza_penalty_calc < $stanza_penalty_calc_default) 
+  if((	$stanza_penalty_calc < $stanza_penalty_calc_default)
   	and $penalty_status eq "penalty"
 	and $timer_penalty >=15)
      {
@@ -1057,7 +1057,7 @@ Calculate message statistics
       $penalty_status="normal";
       querybot_log("info","calculate_stats(): Workload is back to normal...");
      } ### if((  $stanza_penalty_calc < $stanza_penalty_calc_default) ...
-  
+
   return 0;
  } ### calculate_stats
 
@@ -1072,7 +1072,7 @@ sub jabber_set_presence
 
 =head2 jabber_set_presence()
 
-Set new presence if we have another presence status or we have set the force 
+Set new presence if we have another presence status or we have set the force
 flag (for transport presence).
 
 =cut
@@ -1099,12 +1099,12 @@ sub jabber_send_message
  {
   my $from	= shift;
   my $type	= shift;
-  my $thread	= shift; 
+  my $thread	= shift;
   my $body	= shift;
 
 =head2 jabber_send_message()
 
-This function send all jabber messages which are outgoing from the 
+This function send all jabber messages which are outgoing from the
 jabber-querybot.
 
 =cut
@@ -1144,7 +1144,7 @@ sub penalty_handler
 
 =head2 penalty_handler()
 
-This function checks if the bot is overloaded with incoming mesages and 
+This function checks if the bot is overloaded with incoming mesages and
 reject if it is. Two times that's ok so 2:1 because while in main.
 
 =cut
@@ -1161,10 +1161,10 @@ Bot admin got everytime an answer.
     if($user eq $bot_admin)
      { return 0; }
     else
-     { 
+     {
       querybot_log("info","penalty_handler($user): Query not proceeded ($stanza_penalty_calc >= " .
 		"$stanza_penalty_calc_default)");
-      return 1; 
+      return 1;
      } ### if($user eq $bot_admin)
    return 0;
   } ### if($querystatus == 1 and $penalty_status eq "penalty")
@@ -1203,9 +1203,9 @@ Calculate elapsed worktime for a query
   return $elapsed;
  } ### calculate_elapsed_time
 
-sub sendError 
+sub sendError
  {
-  
+
   my ($msg, $to, $from, $code, $text) = @_;
 
 =head2 sendError()
@@ -1284,7 +1284,7 @@ Connect bot and initialize all timers.
 }
 
 
-sub check_before_start 
+sub check_before_start
 # Check necessary settings before starting up
 {
 
@@ -1296,14 +1296,14 @@ does not match or is missing.
 
 =cut
 
-unless ($service_name and 
+unless ($service_name and
 	$ident and
 	$hostname and
 	$port and
 	$user and
-	$password) 
+	$password)
 { print "Please check settings (service_name, ident, hostname, port, user
-or password at /etc/jabber-querybot/Querymodule.pm\n"; 
+or password at /etc/jabber-querybot/Querymodule.pm\n";
   exit(1); }
 }
 
@@ -1311,7 +1311,7 @@ or password at /etc/jabber-querybot/Querymodule.pm\n";
 
 Copyright (C) 2009-2012 Marco Balmer <marco@balmer.name>
 
-The Debian packaging is licensed under the 
+The Debian packaging is licensed under the
 GPL, see `/usr/share/common-licenses/GPL-3'.
 
 =cut
