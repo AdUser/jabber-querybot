@@ -34,10 +34,9 @@ use utf8;
 
 # jabber-querybot modules
 use JabberQuerybot;
+use Querymodule;
 
 ### BEGIN CONFIGURATION ###
-use Querymodule;
-my $release = "0.1.0";
 
 my $ident                        = $Querymodule::ident;
 my $service_name                 = $Querymodule::service_name;
@@ -58,12 +57,15 @@ my $bot_description              = $Querymodule::bot_description;
 
 ### END CONFIGURATION ###
 
+### SIGNAL HANDLERS ###
+
 $SIG{KILL}      = \&Stop;
 $SIG{TERM}      = \&Stop;
 $SIG{INT}       = \&Stop;
 
-### Start of Main-Script ###
+### SYSTEM VARIABLES ###
 
+my $release = "0.1.0";
 my $Con_stat;
 my $querystatus                  = 0;
 my $querycount                   = 0;
@@ -95,6 +97,8 @@ my $timer_auto_query             = 0;
 my @system_load                  = "";
 my $system_load_status           = "0";  # system load: 0 - ok, 1 - too high
 
+### Start of Main-Script ###
+
 $Querymodule::Con = new Net::XMPP::Client(debuglevel => 0,
                                           debugfile  => "stdout");
 
@@ -104,9 +108,7 @@ if ($Querymodule::stanza_penalty_calc_default)
 }
 
 openlog($ident, "", "local0");
-
 check_before_start();
-
 querybot_log("info","Init(): Startup $ident...");
 
 while(system_load_check() ne 0)
@@ -119,85 +121,75 @@ connect_bot();
 
 # Loop until we're finished.
 while ($Querymodule::Con)
- {
- reconnect_server() unless defined($Querymodule::Con->Process(1));
- $timer_presence++;
- $timer_idle++;
- $uptime++;
- $timer_auto_query++;
- $timer_reconnect++;
- $timer_penalty++;
- calculate_stats();
- # Check if system load is too high.
- if(system_load_check() == 1)
- {
-   querybot_log("info","main->system_load_check(): System load too high, will shutdown querybot.");
-   disconnect_server();
-   while(system_load_check() ne 0)
-   {
-     sleep 10;
-     querybot_log("info",'main->system_load_check(): Load still too high ('.$system_load[0].')');
-   }
-   connect_bot();
- }
+{
+  reconnect_server() unless defined($Querymodule::Con->Process(1));
+  $timer_presence++;
+  $timer_idle++;
+  $uptime++;
+  $timer_auto_query++;
+  $timer_reconnect++;
+  $timer_penalty++;
+  calculate_stats();
 
- #
- # Send let's go
- #
- if($timer_presence == 0)
+  # Check if system load is too high.
+  if(system_load_check() == 1)
   {
-   jabber_set_presence(undef,"Ok, let's go, I am ready for queries...");
-   $querystatus		=1;
-   $timer_penalty	=0;
-  } ### if($timer_presence == 0)
+    querybot_log("info","main->system_load_check(): System load too high, will shutdown querybot.");
+    disconnect_server();
+    while(system_load_check() ne 0)
+    {
+      sleep 10;
+      querybot_log("info",'main->system_load_check(): Load still too high ('.$system_load[0].')');
+    }
+    connect_bot();
+  }
 
- if($timer_penalty >= 60)
+  # Send let's go
+  if($timer_presence == 0)
   {
-  $timer_penalty=0;
-  $stanza_counter_total_penalty = $stanza_counter_total;
-  } ### if($timer_penalty > 60)
+    jabber_set_presence(undef, "Ok, let's go, I am ready for queries...");
+    $querystatus   = 1;
+    $timer_penalty = 0;
+  }
 
- if($timer_reconnect >= $timer_reconnect_default and $querystatus == 1)
+  if($timer_penalty >= 60)
   {
-   querybot_log("info","reconnect_mode(): Execute...");
-   disconnect_server();
-   querybot_log("info","reconnect_mode(): Wait...");
-   sleep(10);
-   connect_bot();
-   querybot_log("info","reconnect_mode(): Done");
-  } ### END of if($timer_reconnect....
+    $timer_penalty = 0;
+    $stanza_counter_total_penalty = $stanza_counter_total;
+  }
 
- #
- # Change presence status only, if queries are enabled
- #
- unless($querystatus == 0)
- {
-
- #
- # Send timer presence (for transports like icq and msn
- #
- if(($timer_presence > $timer_presence_default) and ($timer_idle > $timer_idle_default)
- 	and $penalty_status eq "normal")
+  if($timer_reconnect >= $timer_reconnect_default and $querystatus == 1)
   {
-        querybot_log("info","mail(): $bot_idle_message workload: $msg_per queries/hour");
-	jabber_set_presence(
-	"away","$bot_idle_message workload: $msg_per queries/hour","force");
-	$timer_presence = 1;
-  } ### if(($timer_presence > $timer_presence_default) and ($timer_idle > $timer_idle_default))
+    querybot_log("info","reconnect_mode(): Execute...");
+    disconnect_server();
+    querybot_log("info","reconnect_mode(): Wait...");
+    sleep(10);
+    connect_bot();
+    querybot_log("info","reconnect_mode(): Done");
+  }
 
- #
- # Run auto queries, if configured
- #
- if($status_auto_query == 1 and ($querystatus==1 and ($timer_auto_query >= $timer_auto_query_run)))
+  # Change presence status only, if queries are enabled
+  unless($querystatus == 0)
   {
-   querybot_log("notice","run_auto_query(): Execute...");
-   $timer_auto_query=0; my ($ret,$status) = run_auto_query();
-   querybot_log("notice","run_auto_query(): Exit: $ret $status");
-  } ### if($status_auto_query == 1 and ($querystatus==1 and ($timer_auto_query >= $timer_auto_query_run)))
+    # Send timer presence (for transports like icq and msn
+    if(($timer_presence > $timer_presence_default) and ($timer_idle > $timer_idle_default)
+        and $penalty_status eq "normal")
+    {
+      querybot_log("info","mail(): $bot_idle_message workload: $msg_per queries/hour");
+      jabber_set_presence("away", "$bot_idle_message workload: $msg_per queries/hour", "force");
+      $timer_presence = 1;
+    }
 
-  } ### END of unless($querystatus)
-} ### while
+    # Run auto queries, if configured
+    if($status_auto_query == 1 and ($querystatus==1 and ($timer_auto_query >= $timer_auto_query_run)))
+    {
+      querybot_log("notice", "run_auto_query(): Execute...");
+      $timer_auto_query=0; my ($ret, $status) = run_auto_query();
+      querybot_log("notice", "run_auto_query(): Exit: $ret $status");
+    }
 
+  }
+}
 ### End of Main-Script ###
 
 sub InMessage
