@@ -520,24 +520,22 @@ sub InPresence
   }
 }
 
-######################################################################
-sub sendPresence {
-######################################################################
-        my ($pres, $to, $from, $type, $show, $status) = @_;
-
 =head2 sendPresence()
 
 Send presence information to user
 
 =cut
 
-        $pres->SetType($type);
-        $pres->SetShow($show);
-        $pres->SetStatus($status);
-        $pres->SetTo($to);
-        $pres->SetFrom($from);
-        $Querymodule::Con->Send($pres);
+sub sendPresence
+{
+  my ($pres, $to, $from, $type, $show, $status) = @_;
 
+  $pres->SetType($type);
+  $pres->SetShow($show);
+  $pres->SetStatus($status);
+  $pres->SetTo($to);
+  $pres->SetFrom($from);
+  $Querymodule::Con->Send($pres);
 }
 
 
