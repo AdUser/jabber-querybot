@@ -388,21 +388,17 @@ sub connect_server
   }
 }
 
-######################################################################
-sub Stop {
-######################################################################
-
 =head2 Stop()
 
 Shutdown jabber connection and exit main program
 
 =cut
 
-disconnect_server();
-querybot_log("info","Stop(): Exit: 0");
-
-exit(0);
-
+sub Stop
+{
+  disconnect_server();
+  querybot_log("info","Stop(): Exit: 0");
+  exit(0);
 }
 
 ######################################################################
