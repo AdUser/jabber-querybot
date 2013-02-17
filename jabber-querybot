@@ -337,70 +337,56 @@ sub InMessage
   return 0;
 }
 
-######################################################################
-sub connect_server {
-######################################################################
-
-querybot_log("info","connect_server(): Connecting to $hostname jabber-server");
-
 =head2 connect_server()
 
 This function connects to the jabber server with the given credentials from
 Querymodule.pm.
 
 =cut
+sub connect_server
+{
+  querybot_log("info","connect_server(): Connecting to $hostname jabber-server");
 
-$Querymodule::Con->Connect(
-                hostname		=> $hostname,
-                port			=> $port,
-                timeout			=> $timeout
-	);
+  $Querymodule::Con->Connect(
+    hostname   => $hostname,
+    port       => $port,
+    timeout    => $timeout);
 
   if ($Querymodule::Con->Connected())
-   {
+  {
     querybot_log("info","Connect_server(): Connection successfully");
-   }
+  }
   else
-   {
+  {
     querybot_log("info","Connect_server(): Ooops... no connection for $user\@$hostname, we're waiting 60 secs ...");
 
-    for(my $i=0;$i< 60; $i++)
-     {
-      sleep(1);
-     }
+    for(my $i=0; $i < 60; $i++)
+    { sleep(1); }
+
     connect_server();
-   }
+  }
 
-=head2
+  # Set the call back functions. This functions will be executed
+  # if a message of the types <message/> <iq/> or <presence/> are incoming.
+  querybot_log("info","connect_server(): Setting up callbacks");
+  $Querymodule::Con->SetCallBacks(
+    message  => \&InMessage,
+    iq       => \&InIQ,
+    presence => \&InPresence);
 
-Set the call back functions. This functions will be executed
-if a message of the types <message/> <iq/> or <presence/>
-are incoming.
+  querybot_log("info","connect_server(): Send authentication $user\@$hostname");
+  my ($auth_status, $auth_message) =
+    $Querymodule::Con->AuthSend(
+      username => $user,
+      password => $password,
+      resource => $resource);
 
-=cut
-
-querybot_log("info","connect_server(): Setting up callbacks");
-$Querymodule::Con->SetCallBacks	(
-  "message" 	=> \&InMessage,
-  "iq" 		=> \&InIQ,
-  "presence" 	=> \&InPresence
-			);
-
-querybot_log("info","connect_server(): Send authentication $user\@$hostname");
-my ($auth_status,$auth_message) = $Querymodule::Con->AuthSend (
-  username=>	$user,
-  password=>	$password,
-  resource=>	$resource
-);
-querybot_log("info","connect_server(): Authentication $auth_status");
-
-if ($auth_status ne "ok") {
-die "Authentication status: $auth_status";
+  querybot_log("info","connect_server(): Authentication $auth_status");
+  if ($auth_status ne "ok")
+  {
+    die "Authentication status: $auth_status";
+  }
 }
-
-}
-######################################################################
-
 
 ######################################################################
 sub Stop {
