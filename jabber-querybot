@@ -538,29 +538,21 @@ sub sendPresence
   $Querymodule::Con->Send($pres);
 }
 
-
-sub systemcommands {
-
-my $from	= shift;
-my $barejid	= get_barejid($from);
-my $message 	= shift;
-my $type	= shift;
-my $thread	= shift;
-
 =head2 systemcommands()
 
-=over 2
-
-=item * If user type '!help` send a help instruction to the user
-
-=back
+If user type '!help` send a help instruction to the user
 
 =cut
 
-if (($message eq '!help') or ($message eq 'help'))
+sub systemcommands
 {
-  my $help_msg = $bot_description;
-  $help_msg .= "\n
+  my ($from, $message, $type, $thread ) = @_;
+  my $barejid = get_barejid($from);
+
+  if (($message eq '!help') or ($message eq 'help'))
+  {
+    my $help_msg = $bot_description;
+    $help_msg .= "\n
 Bot admin:
 !help
 !status
@@ -570,32 +562,24 @@ Bot admin:
 !shutdown
 
 Bot support contact xmpp: $bot_admin";
-  querybot_log("info","InMessage($barejid): Help description --  delivered ");
-  return ($help_msg);
-} ### if (($ret_msg eq '!help') or ($ret_msg eq 'help'))
 
-=head2
+    querybot_log("info","InMessage($barejid): Help description --  delivered ");
+    return ($help_msg);
+  }
 
-=over 2
-
-=item * Send statistic information to the user if he types '!status`
-
-=back
-
-=cut
-
-if ($message eq '!status')
-{
-  calculate_stats();
-  my $ret_bot_status ="$ident
+  # Send statistic information to the user if he types '!status`
+  if ($message eq '!status')
+  {
+    calculate_stats();
+    my $ret_bot_status = "$ident
 ---
 Uptime: $uptime_hours h
 Status: `$bot_status`
-Queries: $msg_per/h
-";
-if ($barejid eq $bot_admin)
-{
-  $ret_bot_status.="
+Queries: $msg_per/h\n";
+
+    if ($barejid eq $bot_admin)
+    {
+      $ret_bot_status .= "
 Query status: $querystatus
 queries total: $querycount
 Idle timer: $timer_idle secs
@@ -615,66 +599,52 @@ Penalty status: `$penalty_status`
 Penalty timer: $timer_penalty waits
 Stanza penalty calc : $stanza_penalty_calc / $stanza_penalty_calc_default
 Counter penalties: $penalty_counter_penalties
-Counter penalty normal: $penalty_counter_normal
-";
-} ### END of if ($barejid eq $bot_admin)
-return ($ret_bot_status);
-}
+Counter penalty normal: $penalty_counter_normal\n";
 
-=head2
+    }
 
-=over 2
-
-=item * Is it a bot command?
-
-=item * Is the bot command from the bot admin? If not, send "not allowed"
-
-=item * '!shutdown` will shutdown your bot via jabber invoke.
-
-=item * '!query off` turn off queries
-
-=item * '!query on` turn on queries
-
-=back
-
-=cut
-
-if($message =~ /!/)
- {
- unless ($bot_admin eq $barejid)
-  {
-   return ("$message -- not allowed command");
+    return ($ret_bot_status);
   }
- }
 
-if ($message eq '!shutdown')
-	{
-	disconnect_server();
-	exit(0);
-	}
+  # FIXME: this regexp matches ANY message with '!'
+  if($message =~ /!/)
+  {
+    unless ($bot_admin eq $barejid)
+    {
+      return ("$message -- not allowed command");
+    }
+  }
 
-if ($message eq '!query off')
-        {
-	$querystatus = 0;
-	#jabber_set_presence("dnd","$bot_msg_maintenance");
-	return ("$ident -- Queries blocked");
-        }
+  # FIXME: any user can send '!shutdown'
+  if ($message eq '!shutdown')
+  {
+    disconnect_server();
+    exit(0);
+  }
 
-if ($message eq '!query on')
-        {
-        $querystatus = 1;
-	#jabber_set_presence(undef,"Back at work...");
-        return ("$ident -- Queries enabled");
-        }
+  if ($message eq '!query off')
+  {
+    $querystatus = 0;
+    # jabber_set_presence("dnd", "$bot_msg_maintenance");
+    return ("$ident -- Queries blocked");
+  }
 
-if ($message =~ /!penalty workload/)
-        {
-	my @parameter         = split(/\s/,$message);
-	$stanza_penalty_calc_default = $parameter[2];
-	return ("$ident -- penalty default set to: $stanza_penalty_calc_default");
-        }
- return $message;
-} ### systemcommands()
+  if ($message eq '!query on')
+  {
+    $querystatus = 1;
+    #jabber_set_presence(undef,"Back at work...");
+    return ("$ident -- Queries enabled");
+  }
+
+  if ($message =~ /!penalty workload/)
+  {
+    my @parameter  = split(/\s/,$message);
+    $stanza_penalty_calc_default = $parameter[2];
+    return ("$ident -- penalty default set to: $stanza_penalty_calc_default");
+  }
+
+  return $message;
+}
 
 sub get_barejid
  {
