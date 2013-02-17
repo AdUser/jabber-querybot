@@ -425,15 +425,6 @@ sub reconnect_server
   connect_server();
 }
 
-######################################################################
-sub InIQ {
-######################################################################
-
-my $sid 	= shift;
-my $iq		= shift;
-my $from 	= $iq->GetFrom();
-my $barejid	= get_barejid($from);
-
 =head2 InIQ()
 
 We do not proceed any iq (information query), this is only for
@@ -441,24 +432,24 @@ statisic.
 
 =cut
 
-$stanza_counter_iq++;
+sub InIQ
+{
+  my ($sid, $iq) = @_;
+  my $from    = $iq->GetFrom();
+  my $barejid = get_barejid($from);
 
-querybot_log("debug","InIQ($barejid): received -- ignored");
+  $stanza_counter_iq++;
 
-#
-# increment timer overload
-#
-if(penalty_handler($barejid) > 0)
- {
-  #
+  querybot_log("debug","InIQ($barejid): received -- ignored");
+
   # Do not process message if we are overloaded.
-  #
-  querybot_log("debug","pentalty_handler(): InIQ($barejid):");
-  return undef;
- }
-
-
+  if (penalty_handler($barejid) > 0)
+  {
+    querybot_log("debug","pentalty_handler(): InIQ($barejid):");
+    return undef;
+  }
 }
+
 ######################################################################
 sub InPresence {
 ######################################################################
