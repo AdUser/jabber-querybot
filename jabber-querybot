@@ -413,21 +413,18 @@ sub disconnect_server
   $Querymodule::Con->Disconnect;
 }
 
-
-######################################################################
-sub reconnect_server {
-######################################################################
-
 =head2 reconnect_server()
 
 Reconnect and create a log entry.
 
 =cut
 
-querybot_log("info","reconnect_server(): connection lost, reconnecting...");
-connect_server();
-
+sub reconnect_server
+{
+  querybot_log("info","reconnect_server(): connection lost, reconnecting...");
+  connect_server();
 }
+
 ######################################################################
 sub InIQ {
 ######################################################################
