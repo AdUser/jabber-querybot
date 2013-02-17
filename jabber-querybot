@@ -192,172 +192,27 @@ while ($Querymodule::Con)
 }
 ### End of Main-Script ###
 
-sub InMessage
-{
+### Service Functions ###
 
 =head2 InMessage()
 
 An incoming jabber message to the bot will hook this function.
 
-=over 2
-
 =item * Read parameters of incoming stanza
-
-=back
-
-=cut
-
-my $t0 			= gettimeofday;
-my $sid			= shift;
-my $message		= shift;
-my $from                = $message->GetFrom();
-
-=head2
-
-=over 2
 
 =item * Decode utf8 string
 
-=back
-
-=cut
-
-my $from_utf8_decoded	= encode("utf8", $from);
-my $barejid             = get_barejid($from_utf8_decoded);
-
-$stanza_counter_message++;
-
-=head2
-
-=over 2
-
-=item * increment timer overload and do not process message if bot is
-overloaded.
-
-=back
-
-=cut
-
-if(penalty_handler($barejid) > 0)
- {
-  return undef;
- }
-
-my $digest_jid 		= md5_hex($barejid);
-my $to                  = $message->GetTo();
-my $body                = $message->GetBody();
-my $subject             = $message->GetSubject();
-my $type                = $message->GetType();
-my $thread		= $message->GetThread();
-
-=head2
-
-=over 2
+=item * increment timer overload and do not process message if bot is overloaded.
 
 =item * Ignore message if it is from myself
 
-=back
-
-=cut
-
-if($service_name eq $barejid)
- {
-  querybot_log("info","InMessage(): Msg from myself -- ignored");
-  return -1;
- } ### if($service_name eq $barejid)
-
-=head2
-
-=over 2
-
 =item * Be sure, that it is not a message from another transport
-
-=back
-
-=cut
-
-unless($barejid =~ /\@/)
- {
- querybot_log("info","InMessage($barejid): System msg (without @) -- ignored ");
- return 0;
- } ### unless($barejid =~ /\@/)
-if($body eq "")
- {
- querybot_log("info","InMessage($barejid): Msg (empty body) -- ignored ");
- return 0;
- } ### if($body eq "")
-
-=head2
-
-=over 2
 
 =item * Check any systemcommands for the bot
 
-=back
-
-=cut
-
-my ($ret_msg);
-if($body =~ /!/ or $body eq "help")
- {
-  ($ret_msg) 		= systemcommands($from, $body,$type,$thread);
-  my $elapsed 		= calculate_elapsed_time($t0);
-  my $ret_msg_footer 	= jabber_add_footer($ret_msg,$elapsed);
-  querybot_log("info","InMessage($barejid): Admin command `$body` --  processed");
-  jabber_send_message($from,$type,$thread,$ret_msg_footer);
-  return 0;
- } ### unless($barejid eq $bot_admin)
-
-=head2
-
-=over 2
-
 =item * If the bot has sleeping status, change it to work
 
-=back
-
-=cut
-
-unless ($querystatus == 0)
-{
-if ($bot_status eq 'away')
- {
-  jabber_set_presence(undef,$bot_work_message);
- } ### if ($bot_status eq 'away')
-} ### END of unless($querystatus ....
-
-=head2
-
-=over 2
-
 =item * We process only normal text or chat type jabber messages
-
-=back
-
-=cut
-
-if (($type eq 'normal' or $type eq '' or $type eq 'chat')
-	and ($querystatus==1 or ($bot_admin eq $barejid)))
- {
-
-  # If timer_presence is < 0 and a stanza is incoming, querystatus will
-  # never go to 1.
-  if($timer_presence > 0 and $penalty_status eq "normal")
-   {
-    jabber_set_presence(undef,$bot_work_message);
-    $timer_idle 		= 0;
-    $timer_presence 		= 0;
-   } ### if($timer_presence > 0)
-
-my (	$response,
-	$response_status,
-	$response_status_code,
-	$s_proceeded
-   );
-
-=head2
-
-=over 2
 
 =item * And now we give the real text string which was incoming to the
 bot via run_query().
@@ -365,54 +220,8 @@ bot via run_query().
 =item * If run_query() say us 'ignore` we do a log entry and do not answer
 via jabber to the user.
 
-=back
-
-=cut
-
-  ($response_status,$response_status_code,$response,$s_proceeded)
-  = run_query($body,$from,$barejid,$digest_jid,$subject);
-
-  if ($response_status eq "ignore")
-   {
-    querybot_log("info","InMessage($from)->run_query(): -- Message ignored ");
-    return -1;
-   } ### if ($response_status eq "ignore")
-
-  if ($response_status eq "presence")
-   {
-    querybot_log("info","InMessage($from)->run_query(): -- Presence sent");
-    jabber_set_presence(undef,$response);
-    return -1;
-   } ### if ($response_status eq "presence")
-
-  if ($response_status eq "error")
-   {
-
-=head2
-
-=over 2
-
-=item * If run_query() says 'error` we send a jabber error stanza wiht the
+=item * If run_query() says 'error` we send a jabber error stanza with the
 status message from run_query() back to the user.
-
-=back
-
-=cut
-
-    sendError(	$message,
-    		$from,
-		$to,
-		$response_status_code,
-		$response);
-
-    querybot_log("info","InMessage($from)->run_query(): -- Error delivered");
-    return -1;
-   } ### if ($response_status eq "error")
-
-
-=head2
-
-=over 2
 
 =item * If there was no error, we update the statistic vars and send the
 answer from run_query() back to the jabber user.
@@ -421,19 +230,112 @@ answer from run_query() back to the jabber user.
 
 =cut
 
-  $querycount++;
+sub InMessage
+{
+  my $t0                  = gettimeofday;
+  my $sid                 = shift;
+  my $message             = shift;
+  my $from                = $message->GetFrom();
+  my $from_utf8_decoded   = encode("utf8", $from);
+  my $barejid             = get_barejid($from_utf8_decoded);
+  my $digest_jid          = md5_hex($barejid);
+  my $to                  = $message->GetTo();
+  my $body                = $message->GetBody();
+  my $subject             = $message->GetSubject();
+  my $type                = $message->GetType();
+  my $thread              = $message->GetThread();
 
-  my $elapsed 			= calculate_elapsed_time($t0);
-  my $ret_msg_with_footer 	= jabber_add_footer($response,$elapsed);
+  $stanza_counter_message++;
+
+  if(penalty_handler($barejid) > 0)
+  {
+    return undef;
+  }
+
+  if($service_name eq $barejid)
+  {
+    querybot_log("info","InMessage(): Msg from myself -- ignored");
+    return -1;
+  }
+
+  unless($barejid =~ /\@/)
+  {
+    querybot_log("info","InMessage($barejid): System msg (without @) -- ignored ");
+    return 0;
+  }
+
+  if($body eq "")
+  {
+    querybot_log("info","InMessage($barejid): Msg (empty body) -- ignored ");
+    return 0;
+  }
+
+  my ($ret_msg);
+  if($body =~ /!/ or $body eq "help")
+  {
+    ($ret_msg)          = systemcommands($from, $body,$type,$thread);
+    my $elapsed         = calculate_elapsed_time($t0);
+    my $ret_msg_footer  = jabber_add_footer($ret_msg,$elapsed);
+    querybot_log("info", "InMessage($barejid): Admin command `$body` --  processed");
+    jabber_send_message($from, $type, $thread, $ret_msg_footer);
+    return 0;
+  }
 
 
-my $ret_jabber_send_msg = jabber_send_message($from,$type,$thread,$ret_msg_with_footer);
-querybot_log("info","InMessage($barejid/$digest_jid): Msg \`$type\` in in $elapsed");
- } ###
-querybot_log("debug","InMessage($barejid): Msg \`$type\` string \`$body\'");
+  unless ($querystatus == 0)
+  {
+    if ($bot_status eq 'away')
+    {
+      jabber_set_presence(undef,$bot_work_message);
+    }
+  }
 
- return 0;
-} ### InMessage()
+  if (($type eq 'normal' or $type eq '' or $type eq 'chat')
+      and ($querystatus==1 or ($bot_admin eq $barejid)))
+  {
+    # If timer_presence is < 0 and a stanza is incoming, querystatus will never go to 1.
+    if($timer_presence > 0 and $penalty_status eq "normal")
+    {
+      jabber_set_presence(undef,$bot_work_message);
+      $timer_idle     = 0;
+      $timer_presence = 0;
+    }
+
+    my ($response, $response_status, $response_status_code, $s_proceeded);
+
+    ($response_status, $response_status_code, $response, $s_proceeded) =
+    run_query($body, $from, $barejid, $digest_jid, $subject);
+
+    if ($response_status eq "ignore")
+    {
+      querybot_log("info", "InMessage($from)->run_query(): -- Message ignored ");
+      return -1;
+    }
+
+    if ($response_status eq "presence")
+    {
+      querybot_log("info", "InMessage($from)->run_query(): -- Presence sent");
+      jabber_set_presence(undef, $response);
+      return -1;
+    }
+
+    if ($response_status eq "error")
+    {
+      sendError($message, $from, $to, $response_status_code, $response);
+      querybot_log("info","InMessage($from)->run_query(): -- Error delivered");
+      return -1;
+    }
+    $querycount++;
+
+    my $elapsed              = calculate_elapsed_time($t0);
+    my $ret_msg_with_footer  = jabber_add_footer($response, $elapsed);
+    my $ret_jabber_send_msg = jabber_send_message($from,$type,$thread,$ret_msg_with_footer);
+    querybot_log("info","InMessage($barejid/$digest_jid): Msg \`$type\` in in $elapsed");
+  }
+  querybot_log("debug","InMessage($barejid): Msg \`$type\` string \`$body\'");
+
+  return 0;
+}
 
 ######################################################################
 sub connect_server {
