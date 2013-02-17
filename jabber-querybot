@@ -450,20 +450,6 @@ sub InIQ
   }
 }
 
-######################################################################
-sub InPresence {
-######################################################################
-
-
-my $sid 		= shift;
-my $presence 		= shift;
-my $from 		= $presence->GetFrom();
-my $barejid		= get_barejid($from);
-my $to 			= $presence->GetTo();
-my $type 		= $presence->GetType();
-my $status 		= $presence->GetStatus();
-my $xml			= $presence->GetXML();
-
 =head2 InPresence()
 
 =over 2
@@ -476,86 +462,62 @@ my $xml			= $presence->GetXML();
 
 =cut
 
-$stanza_counter_presence++;
+sub InPresence
+{
+  my $sid           = shift;
+  my $presence      = shift;
+  my $from          = $presence->GetFrom();
+  my $barejid       = get_barejid($from);
+  my $to            = $presence->GetTo();
+  my $type          = $presence->GetType();
+  my $status        = $presence->GetStatus();
+  my $xml           = $presence->GetXML();
 
-if(penalty_handler($barejid) > 0)
- {
-  querybot_log("debug","penalty_handler(): Presence($barejid):");
-  return undef;
- }
+  $stanza_counter_presence++;
 
-=head2
+  if(penalty_handler($barejid) > 0)
+  {
+    querybot_log("debug","penalty_handler(): Presence($barejid):");
+    return undef;
+  }
 
-We have a problem in Net::Jabber. An incoming message with a ` in resource
-blocks the bot. We will hotfix that for the moment.
+  # We have a problem in Net::Jabber. An incoming message with a ` in resource
+  # blocks the bot. We will hotfix that for the moment.
+  if ($from =~ /`/)
+  {
+    querybot_log("info","Presence($barejid): Got ``` -- this is a hotfix, will send unsubscribe");
+    sendPresence($presence,$from,$to,'unsubscribe');
+    sendPresence($presence,$from,$to,'unsubscribed');
+    return 0;
+  }
 
-=cut
+  if ($type eq 'subscribe')
+  {
+    querybot_log("notice","Presence($barejid): Got `subscribe` -- do the same");
+    sendPresence($presence,$from,$to,'subscribe');
+    sendPresence($presence,$from,$to,'subscribed');
+  }
 
-if ($from =~ /`/)
- {
-  querybot_log("info","Presence($barejid): Got ``` -- this is a hotfix, will send unsubscribe");
-  sendPresence($presence,$from,$to,'unsubscribe');
-  sendPresence($presence,$from,$to,'unsubscribed');
-  return 0;
- } ### END of unless
+  # Remove subscription if a user remove this bot from his roster
+  if ($type eq 'unsubscribe' or $type eq 'unsubscribed')
+  {
+    querybot_log("notice","Presence($barejid): Got `unsubscribe` -- do the same");
+    sendPresence($presence,$from,$to,'unsubscribe');
 
-=head2
+    # Remove jid from querybot roster
+    my $IqRemoveJid = new Net::XMPP::IQ();
+    $IqRemoveJid->SetTo($barejid);
+    $IqRemoveJid->SetType("set");
+    my $IqRemoveQuery = $IqRemoveJid->NewChild("jabber:iq:roster");
+    $IqRemoveQuery    = $IqRemoveQuery->AddItem(
+                          subscription  => "remove",
+                          jid           => $barejid);
+    $Querymodule::Con->Send($IqRemoveJid);
+    querybot_log("info","Presence($barejid): Removed `$barejid` from roster");
 
-A subscription type `subscribe` is incoming. Send `subscribed` tho the user
-and say hello ;)
-
-=cut
-
-if ($type eq 'subscribe')
-	{
-
-=head2
-
-=over 2
-
-=item * Send presence to user
-
-=back
-
-=cut
-
-         querybot_log("notice","Presence($barejid): Got `subscribe` -- do the same");
-	 sendPresence($presence,$from,$to,'subscribe');
-	 sendPresence($presence,$from,$to,'subscribed');
-
-	} ### END of if ($type eq subscibe
-
-=head2
-
-=over 2
-
-=item * Remove subscription if a user remove this bot from his roster
-
-=back
-
-=cut
-
-if ($type eq 'unsubscribe' or $type eq 'unsubscribed')
-        {
-          	querybot_log("notice","Presence($barejid): Got `unsubscribe` -- do the same");
-                sendPresence($presence,$from,$to,'unsubscribe');
-		#
-		# Remove jid from querybot roster
-		#
-		my $IqRemoveJid 	= new Net::XMPP::IQ();
-		$IqRemoveJid->SetTo($barejid);
-		$IqRemoveJid->SetType("set");
-		my $IqRemoveQuery 	= $IqRemoveJid->NewChild("jabber:iq:roster");
-		$IqRemoveQuery		= $IqRemoveQuery->AddItem(	subscription=>"remove",
-		 							jid=>$barejid);
-		$Querymodule::Con->Send($IqRemoveJid);
-          	querybot_log("info","Presence($barejid): Removed `$barejid` from roster");
-		#
-		#
-		# Send unsubscribed to jid
-		#
-                sendPresence($presence,$from,$to,'unsubscribed');
-        }
+    # Send unsubscribed to jid
+    sendPresence($presence,$from,$to,'unsubscribed');
+  }
 }
 
 ######################################################################
