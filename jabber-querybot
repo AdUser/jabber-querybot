@@ -401,21 +401,17 @@ sub Stop
   exit(0);
 }
 
-######################################################################
-sub disconnect_server {
-######################################################################
-
 =head2 disconnect_server()
 
 Only disconnect from the jabber-server.
 
 =cut
 
-querybot_log("info","disconnect_server(): Disconnecting");
-
-$Querymodule::Con->Disconnect;
-
-} ### END of disconnect_server
+sub disconnect_server
+{
+  querybot_log("info","disconnect_server(): Disconnecting");
+  $Querymodule::Con->Disconnect;
+}
 
 
 ######################################################################
