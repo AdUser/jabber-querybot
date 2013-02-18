@@ -809,22 +809,20 @@ sub penalty_handler
   return 0;
 }
 
-sub jabber_add_footer
- {
-  my $msg 	= shift;
-  my $elapsed 	= shift;
-
 =head2 jabber_add_footer()
 
 Add footer to the processed message.
 
 =cut
 
-$msg .= "
----
-$ident ($release) proceeded in $elapsed sec";
+sub jabber_add_footer
+{
+  my ($msg, $elapsed) = @_;
+
+  $msg .= "\n---\n$ident ($release) proceeded in $elapsed sec";
+
   return $msg;
- } ### jabber_add_footer
+}
 
 sub calculate_elapsed_time
  {
