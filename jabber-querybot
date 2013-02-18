@@ -590,7 +590,7 @@ Total message stanzas: $stanza_counter_message stanzas
 Total presence stanzas: $stanza_counter_presence stanzas
 Total iq stanzas: $stanza_counter_iq stanzas
 Total stanzas: $stanza_counter_total stanzas
-Total message stanzas/h	: $stanza_counter_message_q stanzas/h
+Total message stanzas/h: $stanza_counter_message_q stanzas/h
 Total presence stanzas/h: $stanza_counter_presence_q stanzas/h
 Total iq stanzas/h: $stanza_counter_iq_q stanzas/h
 Total stanzas/h: $stanza_counter_total_q stanzas/h
@@ -660,69 +660,58 @@ sub get_barejid
    return $barejid;
 }
 
-sub calculate_stats
- {
-
 =head2 calcualte_stats()
 
 Calculate message statistics
 
 =cut
 
-  $msg_per 		= $querycount / ($uptime/3600);
+sub calculate_stats
+ {
+  $msg_per                   = $querycount / ($uptime/3600);
 
-  $stanza_counter_total 	= $stanza_counter_message +
-	     				$stanza_counter_iq +
-					$stanza_counter_presence;
+  $stanza_counter_total      =
+    $stanza_counter_message + $stanza_counter_iq + $stanza_counter_presence;
 
-  $stanza_counter_total_q 	= $stanza_counter_message_q +
-	     				$stanza_counter_iq_q +
-					$stanza_counter_presence_q;
+  $stanza_counter_total_q    =
+    $stanza_counter_message_q + $stanza_counter_iq_q + $stanza_counter_presence_q;
 
-  $stanza_counter_total_q	= $stanza_counter_total/($uptime/3600);
-  $stanza_counter_message_q	= $stanza_counter_message/($uptime/3600);
-  $stanza_counter_presence_q	= $stanza_counter_presence/($uptime/3600);
-  $stanza_counter_iq_q		= $stanza_counter_iq/($uptime/3600);
+  $stanza_counter_total_q    = $stanza_counter_total/($uptime/3600);
+  $stanza_counter_message_q  = $stanza_counter_message/($uptime/3600);
+  $stanza_counter_presence_q = $stanza_counter_presence/($uptime/3600);
+  $stanza_counter_iq_q       = $stanza_counter_iq/($uptime/3600);
 
-  $msg_per		= sprintf("%.3f",$msg_per);
+  $msg_per = sprintf("%.3f", $msg_per);
 
-  $stanza_counter_message_q
-	     = sprintf("%.3f",$stanza_counter_message_q);
+  $stanza_counter_message_q  = sprintf("%.3f", $stanza_counter_message_q);
+  $stanza_counter_presence_q = sprintf("%.3f", $stanza_counter_presence_q);
+  $stanza_counter_iq_q       = sprintf("%.3f", $stanza_counter_iq_q);
+  $stanza_counter_total_q    = sprintf("%.3f", $stanza_counter_total_q);
 
-  $stanza_counter_presence_q
-	     = sprintf("%.3f",$stanza_counter_presence_q);
+  $uptime_hours = $uptime / 3600;
+  $uptime_hours = sprintf("%.3f", $uptime_hours);
 
-  $stanza_counter_iq_q
-	     = sprintf("%.3f",$stanza_counter_iq_q);
+  $stanza_penalty_calc =
+    $stanza_counter_total - $stanza_counter_total_penalty;
 
-  $stanza_counter_total_q
-	     = sprintf("%.3f",$stanza_counter_total_q);
+  if (($stanza_penalty_calc >= $stanza_penalty_calc_default)
+      and $penalty_status eq "normal")
+  {
+    $penalty_counter_penalties++;
+    $penalty_status="penalty";
+    querybot_log("info","calculate_stats(): Sorry, $ident has heavy workload, please try again later...");
+  }
 
-  $uptime_hours 	= $uptime / 3600;
-  $uptime_hours 	= sprintf("%.3f",$uptime_hours);
-
-  $stanza_penalty_calc = 	$stanza_counter_total -
-    				$stanza_counter_total_penalty;
-
-  if((	$stanza_penalty_calc >= $stanza_penalty_calc_default)
-  	and $penalty_status eq "normal")
-     {
-      $penalty_counter_penalties++;
-      $penalty_status="penalty";
-      querybot_log("info","calculate_stats(): Sorry, $ident has heavy workload, please try again later...");
-     } ### if($stanza_penalty_calc >= $stanza_penalty_calc_default)
-
-  if((	$stanza_penalty_calc < $stanza_penalty_calc_default)
-  	and $penalty_status eq "penalty"
-	and $timer_penalty >=15)
-     {
-      $penalty_counter_normal++;
-      $penalty_status="normal";
-      querybot_log("info","calculate_stats(): Workload is back to normal...");
-     } ### if((  $stanza_penalty_calc < $stanza_penalty_calc_default) ...
+  if (($stanza_penalty_calc < $stanza_penalty_calc_default)
+      and $penalty_status eq "penalty" and $timer_penalty >= 15)
+  {
+    $penalty_counter_normal++;
+    $penalty_status="normal";
+    querybot_log("info","calculate_stats(): Workload is back to normal...");
+  }
 
   return 0;
- } ### calculate_stats
+}
 
 sub jabber_set_presence
  {
