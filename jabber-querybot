@@ -646,22 +646,19 @@ Counter penalty normal: $penalty_counter_normal\n";
   return $message;
 }
 
-sub get_barejid
- {
-
-   my $user = shift;
-
 =head2 get_barejid()
 
 Remove resource id from a jabber id.
 
 =cut
 
+sub get_barejid
+{
+   my $user = shift;
    my ($barejid)                 = split (/\//, $user);
 
    return $barejid;
-
- } # END of get_barejid
+}
 
 sub calculate_stats
  {
