@@ -783,10 +783,6 @@ sub set_wakeup_mode
   querybot_log("info", "set_wakeup_mode(): Wait and see a moment!");
 }
 
-sub penalty_handler
- {
-  my $user	= shift;
-
 =head2 penalty_handler()
 
 This function checks if the bot is overloaded with incoming mesages and
@@ -794,26 +790,24 @@ reject if it is. Two times that's ok so 2:1 because while in main.
 
 =cut
 
+sub penalty_handler
+{
+  my ($user) = @_;
+
   if($querystatus == 1 and $penalty_status eq "penalty")
-   {
-
-=head2
-
-Bot admin got everytime an answer.
-
-=cut
-
+  {
+    # Bot admin got everytime an answer.
     if($user eq $bot_admin)
-     { return 0; }
-    else
-     {
-      querybot_log("info","penalty_handler($user): Query not proceeded ($stanza_penalty_calc >= " .
-		"$stanza_penalty_calc_default)");
-      return 1;
-     } ### if($user eq $bot_admin)
-   return 0;
-  } ### if($querystatus == 1 and $penalty_status eq "penalty")
- } ### penalty_handler
+    { return 0; }
+
+    my $msg = sprintf("penalty_handler(%s): Query not proceeded (%d >= %d)",
+                     $user, $stanza_penalty_calc, $stanza_penalty_calc_default);
+    querybot_log("info", $msg);
+    return 1;
+  }
+
+  return 0;
+}
 
 sub jabber_add_footer
  {
