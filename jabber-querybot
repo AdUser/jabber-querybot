@@ -746,13 +746,6 @@ sub jabber_set_presence
   return 1;
 }
 
-sub jabber_send_message
- {
-  my $from	= shift;
-  my $type	= shift;
-  my $thread	= shift;
-  my $body	= shift;
-
 =head2 jabber_send_message()
 
 This function send all jabber messages which are outgoing from the
@@ -760,13 +753,18 @@ jabber-querybot.
 
 =cut
 
-  $Querymodule::Con->MessageSend(	to	=>$from,
-  					type 	=>$type,
-                      			body	=>$body,
-					thread	=>$thread,
-                      			priority=>10);
+sub jabber_send_message
+{
+  my ($from, $type, $thread, $body) = @_;
+
+  $Querymodule::Con->MessageSend(
+    to       => $from,
+    type     => $type,
+    body     => $body,
+    thread   => $thread,
+    priority => 10);
   return 0;
- }
+}
 
 sub set_wakeup_mode
  {
