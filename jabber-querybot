@@ -713,15 +713,6 @@ sub calculate_stats
   return 0;
 }
 
-sub jabber_set_presence
- {
-  my $v_bot_status	= shift;
-  my $status		= shift;
-  my $force		= shift;
-
-  unless($force eq "force")
-   { $force = "none"; }
-
 =head2 jabber_set_presence()
 
 Set new presence if we have another presence status or we have set the force
@@ -729,23 +720,31 @@ flag (for transport presence).
 
 =cut
 
+sub jabber_set_presence
+{
+  my ($v_bot_status, $status, $force) = @_
+
+  unless($force eq "force")
+  { $force = "none"; }
+
   if(($v_bot_status ne $bot_status) or $force eq "force")
-   {
-    $bot_status	= $v_bot_status;
+  {
+    $bot_status = $v_bot_status;
     if($v_bot_status)
-     {
-      $Querymodule::Con->PresenceSend(	show	=> $v_bot_status,
-					status	=> $status);
-     } ### if($v_bot_status)
+    {
+      $Querymodule::Con->PresenceSend(show => $v_bot_status, status => $status);
+    }
     else
-     {
-      $Querymodule::Con->PresenceSend(status	=> $status);
-     } ### if($v_bot_status)
-   querybot_log("info","jabber_set_presence($v_bot_status,$force): $status");
-   return 0;
-  } ### if($v_bot_status eq $bot_status)
+    {
+      $Querymodule::Con->PresenceSend(status => $status);
+    }
+
+    querybot_log("info", "jabber_set_presence($v_bot_status, $force): $status");
+    return 0;
+  }
+
   return 1;
- }
+}
 
 sub jabber_send_message
  {
