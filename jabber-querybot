@@ -859,48 +859,39 @@ sub sendError
   $Querymodule::Con->Send($msg);
 }
 
-sub system_load_check
-# check the system load, if it is to high, shutdown connection and wait.
- {
-  my $ret 	= 2;
-  my $load_ok	= 5;
-  my $load_high	= 6;
-
 =head2 system_load_check()
 
-=over 2
-
-=item * Calculate system load
-
-=item * If load is too high shutdown bot.
-
-=item * If load is ok, starting up bot
-
-=back
+check the system load, if it is to high, shutdown connection and wait.
 
 =cut
+
+sub system_load_check
+{
+  my $ret       = 2;
+  my $load_ok   = 5;
+  my $load_high = 6;
 
   # Calculate system load
   @system_load  = split (/,/,Sys::CpuLoad::load());
   my $load_15min = $system_load[0];
 
+  # Load is too high
   if ($load_15min >= $load_high)
-    {
-    # Load is too high
+  {
     $ret = 1;
     $system_load_status = 1;
-    }
-  if ($load_15min <= $load_ok  and $system_load_status == 1 or
-  	$system_load_status == 0)
-    {
-    # Load is ok for starting up bot
+  }
+
+  # Load is ok for starting up bot
+  if ($load_15min <= $load_ok and $system_load_status == 1 or $system_load_status == 0)
+  {
     $ret = 0;
     $system_load_status = 0;
-    }
+  }
 
   querybot_log("debug","system_load_check(): Load 15min: $load_15min return $ret");
   return $ret;
- } ### END of system_load_check()
+}
 
 sub connect_bot
 {
