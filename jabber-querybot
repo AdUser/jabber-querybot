@@ -893,27 +893,21 @@ sub system_load_check
   return $ret;
 }
 
-sub connect_bot
-{
-
 =head2 connect_bot()
 
 Connect bot and initialize all timers.
 
 =cut
 
-   querybot_log("info","connect_bot();");
-   connect_server();
-   set_wakeup_mode();
-   $timer_reconnect 	= 0;
-   $timer_presence  	= -10;
-   $timer_idle		= 0;
-}
-
-
-sub check_before_start
-# Check necessary settings before starting up
+sub connect_bot
 {
+  querybot_log("info","connect_bot();");
+  connect_server();
+  set_wakeup_mode();
+  $timer_reconnect  = 0;
+  $timer_presence   = -10;
+  $timer_idle       = 0;
+}
 
 
 =head2 check_before_start()
