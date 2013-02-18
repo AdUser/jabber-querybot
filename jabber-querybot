@@ -766,26 +766,22 @@ sub jabber_send_message
   return 0;
 }
 
-sub set_wakeup_mode
- {
-
 =head2 set_wakeup_mode()
 
 Set jabber presence via jabber_set_presence()
 
 =cut
 
-  querybot_log("info","set_wakeup_mode(): Send presence $bot_status");
+sub set_wakeup_mode
+{
+  querybot_log("info", "set_wakeup_mode(): Send presence $bot_status");
+  jabber_set_presence("xa", "Morning baby, just a minute, then I will work for you... ;)");
 
-  jabber_set_presence("xa","Morning baby, just a minute, then I will work for you... ;)");
-
-  querybot_log("info","set_wakeup_mode(): Get roster");
-
+  querybot_log("info", "set_wakeup_mode(): Get roster");
   $Querymodule::Con->RosterGet();
-  querybot_log("info","set_wakeup_mode(): Wait and see a moment!");
 
-
- } ### set_wakeup_mode
+  querybot_log("info", "set_wakeup_mode(): Wait and see a moment!");
+}
 
 sub penalty_handler
  {
