@@ -917,15 +917,13 @@ does not match or is missing.
 
 =cut
 
-unless ($service_name and
-	$ident and
-	$hostname and
-	$port and
-	$user and
-	$password)
-{ print "Please check settings (service_name, ident, hostname, port, user
-or password at /etc/jabber-querybot/Querymodule.pm\n";
-  exit(1); }
+sub check_before_start
+{
+  unless ($service_name and $ident and $hostname and $port and $user and $password)
+  {
+    print "Please check settings (service_name, ident, hostname, port, user or password at Querymodule.pm\n";
+    exit(1);
+  }
 }
 
 =head1 COPYRIGHT AND LICENSE
