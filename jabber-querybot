@@ -824,21 +824,22 @@ sub jabber_add_footer
   return $msg;
 }
 
-sub calculate_elapsed_time
- {
-  my $t0	= shift;
-  my $t1 	= gettimeofday;
-
 =head2 calcualte_elapsed_time()
 
 Calculate elapsed worktime for a query
 
 =cut
 
+sub calculate_elapsed_time
+{
+  my $t0 = shift;
+  my $t1 = gettimeofday;
+
   my $elapsed = $t1 - $t0;
-  $elapsed = sprintf("%.3f",$elapsed);
+  $elapsed = sprintf("%.3f", $elapsed);
+
   return $elapsed;
- } ### calculate_elapsed_time
+}
 
 sub sendError
  {
