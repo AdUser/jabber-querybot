@@ -841,17 +841,15 @@ sub calculate_elapsed_time
   return $elapsed;
 }
 
-sub sendError
- {
-
-  my ($msg, $to, $from, $code, $text) = @_;
-
 =head2 sendError()
 
 sendError($message, $from, $to, 404, "text");
 
 =cut
 
+sub sendError
+{
+  my ($msg, $to, $from, $code, $text) = @_;
 
   $msg->SetType('error');
   $msg->SetFrom($from);
@@ -859,7 +857,7 @@ sendError($message, $from, $to, 404, "text");
   $msg->SetErrorCode($code);
   $msg->SetError($text);
   $Querymodule::Con->Send($msg);
- } ### sendError
+}
 
 sub system_load_check
 # check the system load, if it is to high, shutdown connection and wait.
